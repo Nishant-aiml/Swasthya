@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Swasthya Healthcare</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #00A86B;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .emergency-numbers {
+            background: #fff3f3;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .emergency-numbers h2 {
+            color: #e53e3e;
+            margin-top: 0;
+        }
+        .emergency-numbers ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .emergency-numbers li {
+            margin: 10px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #ffe5e5;
+        }
+        .emergency-numbers a {
+            color: #e53e3e;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .retry-button {
+            background: #00A86B;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .retry-button:hover {
+            background: #008f5d;
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>You're Offline</h1>
+        <p>Sorry, you're currently offline. Some features may not be available until you restore your connection.</p>
+        
+        <div class="emergency-numbers">
+            <h2>Emergency Numbers</h2>
+            <ul>
+                <li><a href="tel:108">Ambulance: 108</a></li>
+                <li><a href="tel:100">Police: 100</a></li>
+                <li><a href="tel:101">Fire: 101</a></li>
+            </ul>
+        </div>
+
+        <p>These emergency numbers will work even without an internet connection.</p>
+        
+        <button class="retry-button" onclick="window.location.reload()">
+            Try Again
+        </button>
+    </div>
+
+    <script>
+        // Check connection status
+        window.addEventListener('online', function() {
+            window.location.reload();
+        });
+    </script>
+</body>
+</html>

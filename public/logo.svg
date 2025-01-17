@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background Circle -->
+    <circle cx="256" cy="256" r="248" fill="#00A86B" />
+    
+    <!-- Heart Shape -->
+    <path d="M256 380C256 380 358 308 358 236C358 198.5 327.5 168 290 168C268.8 168 250.2 178.8 240 195.6C229.8 178.8 211.2 168 190 168C152.5 168 122 198.5 122 236C122 308 224 380 224 380" 
+          stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Cross Symbol -->
+    <path d="M256 220V292M220 256H292" 
+          stroke="white" stroke-width="24" stroke-linecap="round"/>
+          
+    <!-- Outer Ring -->
+    <circle cx="256" cy="256" r="248" stroke="white" stroke-width="16" fill="none"/>
+</svg>

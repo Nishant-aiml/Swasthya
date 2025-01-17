@@ -1,0 +1,90 @@
+{
+  "short_name": "Swasthya",
+  "name": "Swasthya by Shrinu - Healthcare Solution",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo48.png",
+      "type": "image/png",
+      "sizes": "48x48",
+      "purpose": "any"
+    },
+    {
+      "src": "logo96.png",
+      "type": "image/png",
+      "sizes": "96x96",
+      "purpose": "any"
+    },
+    {
+      "src": "logo128.png",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "any"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo384.png",
+      "type": "image/png",
+      "sizes": "384x384",
+      "purpose": "any"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#00A86B",
+  "background_color": "#ffffff",
+  "orientation": "any",
+  "categories": ["healthcare", "medical", "health", "emergency"],
+  "description": "Your complete healthcare solution with emergency services, doctor consultations, and more.",
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Homescreen of Swasthya Healthcare"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Emergency Services",
+      "short_name": "Emergency",
+      "description": "Find nearest emergency services",
+      "url": "/emergency",
+      "icons": [{ "src": "logo96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Find Doctor",
+      "short_name": "Doctor",
+      "description": "Find and consult with doctors",
+      "url": "/doctors",
+      "icons": [{ "src": "logo96.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.shrinuswasthya.healthcare",
+      "id": "com.shrinuswasthya.healthcare"
+    }
+  ],
+  "prefer_related_applications": false,
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr"
+}
