@@ -126,68 +126,34 @@ export interface Prescription {
   };
 }
 
+export type AppointmentStatus = 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
+
 export interface Appointment {
   id: string;
   doctorId: string;
   doctorName: string;
-  doctorSpecialization: string;
   patientId: string;
-  hospitalId: string;
+  patientName: string;
+  patientPhone: string;
+  patientEmail: string;
   date: string;
   time: string;
-  duration: number;
-  type: 'in-person' | 'video' | 'phone';
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
-  location: string;
-  payment: {
-    amount: number;
-    status: 'pending' | 'completed' | 'refunded';
-    method?: 'card' | 'upi' | 'cash' | 'ayushman';
-    transactionId?: string;
-    refundDetails?: {
-      amount: number;
-      date: string;
-      reason: string;
-    };
-  };
-  bookingDetails: {
-    bookedAt: string;
-    bookedBy: string;
-    source: 'app' | 'web' | 'phone';
-    symptoms?: string[];
-    notes?: string;
-  };
-  questionnaire?: {
-    symptoms: string[];
-    duration: string;
-    previousTreatments?: string[];
-    allergies?: string[];
-    currentMedications?: string[];
-    medicalHistory?: string[];
-  };
-  prescription?: Prescription;
-  followUp?: {
-    recommended: boolean;
-    date?: string;
-    type?: 'in-person' | 'video' | 'phone';
-    reason?: string;
-    status?: 'scheduled' | 'pending' | 'completed';
-  };
-  feedback?: {
-    rating: number;
-    comment: string;
-    metrics: {
-      punctuality: number;
-      communication: number;
-      effectiveness: number;
-    };
-    anonymous?: boolean;
-    submitted?: string;
-  };
-  carbonOffset?: {
-    saved: number; // in kg CO2
-    equivalentTrees: number;
-  };
+  status: AppointmentStatus;
+  consultationType: 'online' | 'in-person';
+  consultationFee: number;
+  symptoms?: string;
+  diagnosis?: string;
+  prescription?: string;
+  notes?: string;
+  cancellationReason?: string;
+  followUpDate?: string;
+  type?: string;
+}
+
+export interface AppointmentFeedback {
+  rating: number;
+  comment: string;
+  submitted: string;
 }
 
 export interface Hospital {

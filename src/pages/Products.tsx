@@ -60,7 +60,7 @@ export default function Products() {
       description: 'Ultra thin sanitary pads with wings',
       price: 149,
       category: 'women-hygiene',
-      image: '/products/whisper.jpg',
+      image: 'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=500&h=500&fit=crop',
       rating: 4.5,
       reviews: 1250,
       inStock: true,
@@ -70,7 +70,70 @@ export default function Products() {
       ],
       tags: ['sanitary pads', 'ultra thin', 'wings']
     },
-    // Add more products here...
+    {
+      id: '2',
+      name: 'Intimate Hygiene Wash',
+      description: 'pH balanced intimate wash for daily use',
+      price: 299,
+      category: 'women-hygiene',
+      image: 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=500&h=500&fit=crop',
+      rating: 4.6,
+      reviews: 850,
+      inStock: true,
+      alternatives: [
+        { id: 'b1', name: 'VWash Plus', price: 275, rating: 4.4, reviews: 720, inStock: true },
+        { id: 'b2', name: 'Lactacyd', price: 285, rating: 4.5, reviews: 650, inStock: true }
+      ],
+      tags: ['intimate care', 'pH balanced', 'daily use']
+    },
+    {
+      id: '3',
+      name: 'Menstrual Cup',
+      description: 'Reusable silicone menstrual cup',
+      price: 599,
+      category: 'women-hygiene',
+      image: 'https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?w=500&h=500&fit=crop',
+      rating: 4.7,
+      reviews: 1500,
+      inStock: true,
+      alternatives: [
+        { id: 'c1', name: 'Sirona Cup', price: 550, rating: 4.6, reviews: 1200, inStock: true },
+        { id: 'c2', name: 'Peesafe Cup', price: 575, rating: 4.5, reviews: 980, inStock: true }
+      ],
+      tags: ['eco-friendly', 'reusable', 'sustainable']
+    },
+    {
+      id: '4',
+      name: 'Women\'s Multivitamin',
+      description: 'Daily multivitamin supplement for women',
+      price: 549,
+      category: 'wellness',
+      image: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=500&h=500&fit=crop',
+      rating: 4.6,
+      reviews: 2100,
+      inStock: true,
+      alternatives: [
+        { id: 'd1', name: 'HealthKart Women\'s', price: 499, rating: 4.4, reviews: 1800, inStock: true },
+        { id: 'd2', name: 'GNC Women\'s', price: 599, rating: 4.7, reviews: 1600, inStock: true }
+      ],
+      tags: ['vitamins', 'supplements', 'women\'s health']
+    },
+    {
+      id: '5',
+      name: 'Hand Sanitizer Pack',
+      description: '70% Alcohol-based sanitizer, Pack of 3',
+      price: 149,
+      category: 'personal-care',
+      image: 'https://images.unsplash.com/photo-1584483720412-ce931f4aefa8?w=500&h=500&fit=crop',
+      rating: 4.4,
+      reviews: 3200,
+      inStock: true,
+      alternatives: [
+        { id: 'e1', name: 'Dettol Sanitizer', price: 140, rating: 4.3, reviews: 2800, inStock: true },
+        { id: 'e2', name: 'Lifebuoy Sanitizer', price: 145, rating: 4.4, reviews: 2600, inStock: true }
+      ],
+      tags: ['sanitizer', 'hygiene', 'protection']
+    }
   ];
 
   const filteredProducts = mockProducts.filter(product => {

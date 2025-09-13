@@ -1,156 +1,229 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
-import { FaUser, FaLock, FaEnvelope, FaHospital } from 'react-icons/fa';
+import { FaUser, FaLock, FaEnvelope, FaHospital, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({
+    length: false,
+    number: false,
+    lower: false,
+    upper: false
+  });
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, isAuthenticated, loading } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && !loading) {
+      navigate('/');
+    }
+  }, [isAuthenticated, loading, navigate]);
+
+  useEffect(() => {
+    setPasswordStrength({
+      length: password.length >= 6,
+      number: /\d/.test(password),
+      lower: /[a-z]/.test(password),
+      upper: /[A-Z]/.test(password)
+    });
+  }, [password]);
+
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    if (!/\d/.test(password)) {
+      return 'Password must contain at least one number';
+    }
+    if (!/[a-z]/.test(password)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!/[A-Z]/.test(password)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!email || !password || !confirmPassword) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    if (!email.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
 
-    setLoading(true);
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      toast.error(passwordError);
+      return;
+    }
 
     try {
+      setIsSubmitting(true);
       await register(email, password);
-      navigate('/');
     } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('This email is already registered.', {
+          action: {
+            label: 'Login Instead',
+            onClick: () => navigate('/login')
+          }
+        });
+      }
+      // Other errors are handled in AuthContext
       console.error('Registration error:', error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-md bg-white/90 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-xl space-y-6 sm:space-y-8">
-        <div>
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <FaHospital className="text-5xl sm:text-6xl text-blue-600" />
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Swasthya
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">Your Health, Our Priority</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-4">
+      <div className="w-full max-w-md bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <FaHospital className="text-6xl text-blue-600" />
           </div>
-          <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl font-bold text-gray-900">
-            Create your account
-          </h2>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Swasthya
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">Your Health, Our Priority</p>
         </div>
 
-        <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-3 sm:space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaEnvelope className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 group-focus-within:text-blue-600 transition-colors" />
+                <FaEnvelope className="h-5 w-5 text-blue-500" />
               </div>
               <input
-                id="email"
                 type="email"
-                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none block w-full pl-10 px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-white/50 backdrop-blur-sm"
+                className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 transition-all duration-200 ease-in-out group-hover:border-blue-400"
                 placeholder="Enter your email"
+                disabled={isSubmitting}
+                required
               />
             </div>
 
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaLock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 group-focus-within:text-blue-600 transition-colors" />
+                <FaLock className="h-5 w-5 text-blue-500" />
               </div>
               <input
-                id="password"
-                type="password"
-                required
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none block w-full pl-10 px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-white/50 backdrop-blur-sm"
+                className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 transition-all duration-200 ease-in-out group-hover:border-blue-400"
                 placeholder="Create a password"
+                disabled={isSubmitting}
+                required
+                minLength={6}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 my-2">
+              <div className={`text-xs ${passwordStrength.length ? 'text-green-600' : 'text-gray-500'}`}>
+                <span className={`mr-1 ${passwordStrength.length ? '✓' : '○'}`}></span>
+                6+ characters
+              </div>
+              <div className={`text-xs ${passwordStrength.number ? 'text-green-600' : 'text-gray-500'}`}>
+                <span className={`mr-1 ${passwordStrength.number ? '✓' : '○'}`}></span>
+                Contains number
+              </div>
+              <div className={`text-xs ${passwordStrength.lower ? 'text-green-600' : 'text-gray-500'}`}>
+                <span className={`mr-1 ${passwordStrength.lower ? '✓' : '○'}`}></span>
+                Lowercase letter
+              </div>
+              <div className={`text-xs ${passwordStrength.upper ? 'text-green-600' : 'text-gray-500'}`}>
+                <span className={`mr-1 ${passwordStrength.upper ? '✓' : '○'}`}></span>
+                Uppercase letter
+              </div>
             </div>
 
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaLock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 group-focus-within:text-blue-600 transition-colors" />
+                <FaLock className="h-5 w-5 text-blue-500" />
               </div>
               <input
-                id="confirmPassword"
-                type="password"
-                required
+                type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="appearance-none block w-full pl-10 px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-white/50 backdrop-blur-sm"
+                className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 transition-all duration-200 ease-in-out group-hover:border-blue-400"
                 placeholder="Confirm your password"
+                disabled={isSubmitting}
+                required
+                minLength={6}
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center">
-            <input
-              id="terms"
-              name="terms"
-              type="checkbox"
-              required
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="terms" className="ml-2 block text-sm text-gray-600">
-              I agree to the{' '}
-              <button type="button" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
-                Terms of Service
-              </button>{' '}
-              and{' '}
-              <button type="button" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
-                Privacy Policy
-              </button>
-            </label>
-          </div>
-
-          <button
+          <Button
             type="submit"
-            disabled={loading}
-            className="group relative w-full flex justify-center py-2.5 sm:py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]"
+            disabled={isSubmitting || !passwordStrength.length || !passwordStrength.number || !passwordStrength.lower || !passwordStrength.upper}
           >
-            {loading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+            {isSubmitting ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
                 Creating account...
-              </span>
+              </div>
             ) : (
               'Create account'
             )}
-          </button>
+          </Button>
 
           <p className="text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
+            <Link
+              to="/login"
               className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
             >
-              Sign in here
-            </button>
+              Sign in
+            </Link>
           </p>
         </form>
-        <p className="mt-6 text-center text-lg font-semibold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent animate-pulse">
-          by shrinu industries
-        </p>
       </div>
     </div>
   );

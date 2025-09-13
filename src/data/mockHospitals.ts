@@ -5,112 +5,73 @@ export const mockHospitals: Hospital[] = [
     id: '1',
     name: 'City General Hospital',
     type: 'General Hospital',
-    address: {
-      street: '123 Healthcare Avenue',
-      city: 'Hyderabad',
-      state: 'Telangana',
-      pincode: '500001',
-      landmark: 'Near Central Park',
-      country: 'India',
-    },
+    address: '123 Healthcare Ave, Mumbai, Maharashtra 400001',
     location: {
-      lat: 17.385044,
-      lng: 78.486671,
+      lat: 19.0760,
+      lng: 72.8777,
+      address: '123 Healthcare Ave, Mumbai, Maharashtra 400001'
     },
     contact: {
-      phone: '+91 9876543210',
-      email: 'info@cityhospital.com',
-      website: 'www.cityhospital.com',
+      phone: ['022-12345678'],
+      email: 'info@citygeneral.com'
     },
-    facilities: [
-      {
-        name: 'Emergency Care',
-        doctors: 15,
-        services: ['24/7 Emergency', 'Trauma Care', 'Critical Care'],
-      },
-      {
-        name: 'Cardiology',
-        doctors: 10,
-        services: ['Heart Surgery', 'Cardiac Care', 'ECG'],
-      },
-      {
-        name: 'Orthopedics',
-        doctors: 8,
-        services: ['Joint Replacement', 'Spine Surgery', 'Sports Medicine'],
-      },
-    ],
+    ratings: {
+      overall: 4.5,
+      cleanliness: 4.3,
+      staffBehavior: 4.4,
+      waitingTime: 4.0,
+      facilities: 4.6
+    },
     departments: [
-      'Emergency',
-      'Cardiology',
-      'Orthopedics',
-      'Neurology',
-      'Pediatrics',
+      { id: '1', name: 'Cardiology' },
+      { id: '2', name: 'Orthopedics' }
     ],
+    doctors: [],
+    facilities: ['Emergency', 'ICU', 'Pharmacy', 'Laboratory', 'Radiology'],
+    specialties: ['Cardiology', 'Orthopedics', 'Neurology', 'Pediatrics'],
     emergencyServices: {
       available24x7: true,
-      ambulanceNumber: '108',
-      traumaCenter: true,
+      ambulanceService: true,
+      traumaCenter: true
     },
-    acceptsAyushman: true,
-    rating: 4.5,
-    reviewCount: 128,
-    imageUrl: '/hospitals/city-general.jpg',
-    doctors: ['doc1', 'doc2', 'doc3'],
+    imageUrl: '/images/hospitals/city-general.jpg',
+    reviewCount: 120
   },
   {
     id: '2',
     name: 'Apollo Hospitals',
     type: 'Multi-Specialty Hospital',
-    address: {
-      street: '456 Healthcare Avenue',
-      city: 'Hyderabad',
-      state: 'Telangana',
-      pincode: '500002',
-      landmark: 'Near Jubilee Hills',
-      country: 'India',
-    },
+    address: '456 Medical Park, Delhi, Delhi 110001',
     location: {
-      lat: 17.416023,
-      lng: 78.446651,
+      lat: 28.6139,
+      lng: 77.2090,
+      address: '456 Medical Park, Delhi, Delhi 110001'
     },
     contact: {
-      phone: '+91 9876543211',
-      email: 'info@apollohospital.com',
-      website: 'www.apollohospital.com',
+      phone: ['011-87654321'],
+      email: 'info@apollo.com'
     },
-    facilities: [
-      {
-        name: 'Emergency Care',
-        doctors: 20,
-        services: ['24/7 Emergency', 'Trauma Care', 'Critical Care'],
-      },
-      {
-        name: 'Oncology',
-        doctors: 12,
-        services: ['Cancer Treatment', 'Chemotherapy', 'Radiation Therapy'],
-      },
-      {
-        name: 'Cardiology',
-        doctors: 15,
-        services: ['Heart Surgery', 'Cardiac Care', 'ECG'],
-      },
-    ],
+    ratings: {
+      overall: 4.7,
+      cleanliness: 4.6,
+      staffBehavior: 4.5,
+      waitingTime: 4.2,
+      facilities: 4.8
+    },
     departments: [
-      'Emergency',
-      'Oncology',
-      'Cardiology',
-      'Neurology',
-      'Orthopedics',
+      { id: '1', name: 'Oncology' },
+      { id: '2', name: 'Cardiology' },
+      { id: '3', name: 'Neurology' }
     ],
+    doctors: [],
+    facilities: ['Emergency', 'ICU', 'Pharmacy', 'Laboratory', 'Radiology', 'Blood Bank'],
+    specialties: ['Oncology', 'Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics'],
     emergencyServices: {
       available24x7: true,
-      ambulanceNumber: '108',
-      traumaCenter: true,
+      ambulanceService: true,
+      traumaCenter: true
     },
-    acceptsAyushman: true,
-    rating: 4.7,
-    reviewCount: 256,
-    imageUrl: '/hospitals/apollo.jpg',
-    doctors: ['doc4', 'doc5', 'doc6'],
-  },
+    imageUrl: '/images/hospitals/apollo.jpg',
+    reviewCount: 250
+  }
 ];

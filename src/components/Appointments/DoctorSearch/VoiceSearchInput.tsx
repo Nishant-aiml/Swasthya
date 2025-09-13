@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
@@ -10,6 +10,11 @@ interface VoiceSearchInputProps {
   className?: string;
 }
 
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message?: string;
+}
+
 export default function VoiceSearchInput({
   onSearch,
   placeholder = "Search for doctors, specializations, or symptoms...",
@@ -17,21 +22,22 @@ export default function VoiceSearchInput({
 }: VoiceSearchInputProps) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const [isSupported, setIsSupported] = useState(true);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initialize speech recognition
   useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = 'en-IN'; // Set to Indian English
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-IN'; // Set to Indian English
 
-      recognition.onresult = (event) => {
+      recognitionRef.current.onstart = () => setIsListening(true);
+      recognitionRef.current.onend = () => setIsListening(false);
+      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
         const current = event.resultIndex;
         const result = event.results[current];
         const transcript = result[0].transcript;
@@ -43,41 +49,44 @@ export default function VoiceSearchInput({
         }
       };
 
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        stopListening();
-      };
-
-      recognition.onend = () => {
+      recognitionRef.current.onerror = (event: Event) => {
+        const speechEvent = event as SpeechRecognitionErrorEvent;
+        console.error('Speech recognition error:', speechEvent.error);
+        setError(speechEvent.error);
         setIsListening(false);
       };
-
-      setRecognition(recognition);
     } else {
       setIsSupported(false);
     }
 
     return () => {
-      if (recognition) {
-        recognition.abort();
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
       }
     };
-  }, []);
+  }, [onSearch]);
 
   const startListening = useCallback(() => {
-    if (recognition) {
-      recognition.start();
+    if (!recognitionRef.current) {
+      console.error('Speech recognition not supported');
+      return;
+    }
+
+    try {
+      recognitionRef.current.start();
       setIsListening(true);
       setTranscript('');
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
     }
-  }, [recognition]);
+  }, []);
 
   const stopListening = useCallback(() => {
-    if (recognition) {
-      recognition.stop();
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
       setIsListening(false);
     }
-  }, [recognition]);
+  }, []);
 
   const handleSearch = (query: string) => {
     onSearch(query);

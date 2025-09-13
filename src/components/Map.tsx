@@ -1,23 +1,15 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { Location } from '@/types/location';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 import { MapPin } from 'lucide-react';
 
 interface MapProps {
-  center: {
-    lat: number;
-    lng: number;
-  };
+  markers: Location[];
+  center: Location;
   zoom?: number;
-  markers?: Array<{
-    position: {
-      lat: number;
-      lng: number;
-    };
-    title: string;
-  }>;
 }
 
-const Map: React.FC<MapProps> = ({ center, zoom = 14, markers = [] }) => {
+const Map: React.FC<MapProps> = ({ markers, center, zoom = 13 }) => {
   const mapStyles = {
     height: '100%',
     width: '100%',
@@ -131,6 +123,56 @@ const Map: React.FC<MapProps> = ({ center, zoom = 14, markers = [] }) => {
 
   if (!isLoaded) return <div>Loading...</div>;
 
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+
+  useEffect(() => {
+    const initMap = async () => {
+      if (!mapRef.current) return;
+
+      // Initialize the map
+      const map = new google.maps.Map(mapRef.current, {
+        center: { lat: center.lat, lng: center.lng },
+        zoom,
+        styles: [
+          {
+            featureType: 'poi',
+            elementType: 'labels',
+            stylers: [{ visibility: 'off' }]
+          }
+        ]
+      });
+
+      mapInstanceRef.current = map;
+
+      // Clear existing markers
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current = [];
+
+      // Add new markers
+      markers.forEach(marker => {
+        const newMarker = new google.maps.Marker({
+          position: { lat: marker.lat, lng: marker.lng },
+          map,
+          title: marker.address
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+          content: marker.address
+        });
+
+        newMarker.addListener('click', () => {
+          infoWindow.open(map, newMarker);
+        });
+
+        markersRef.current.push(newMarker);
+      });
+    };
+
+    initMap();
+  }, [markers, center, zoom]);
+
   const CustomMarker = () => (
     <div className="absolute transform -translate-x-1/2 -translate-y-full">
       <div className="flex flex-col items-center">
@@ -141,25 +183,11 @@ const Map: React.FC<MapProps> = ({ center, zoom = 14, markers = [] }) => {
   );
 
   return (
-    <GoogleMap
-      mapContainerStyle={mapStyles}
-      zoom={zoom}
-      center={center}
-      options={{
-        styles: customMapStyle,
-        disableDefaultUI: true,
-        zoomControl: true,
-        scrollwheel: false,
-      }}
-    >
-      {markers.map((marker, index) => (
-        <Marker
-          key={index}
-          position={marker.position}
-          title={marker.title}
-        />
-      ))}
-    </GoogleMap>
+    <div
+      ref={mapRef}
+      className="w-full h-full rounded-lg"
+      style={{ minHeight: '300px' }}
+    />
   );
 };
 

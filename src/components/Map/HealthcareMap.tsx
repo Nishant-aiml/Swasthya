@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -6,20 +6,6 @@ import 'leaflet-routing-machine';
 import { searchNearbyPlaces } from '../../services/mapService';
 import '../../styles/global.css';
 import ReactDOM from 'react-dom';
-
-// Custom icons for different facility types
-const createIcon = (color: string) => new L.Icon({
-  iconUrl: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${color}'%3E%3Cpath d='M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 12c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z'/%3E%3C/svg%3E`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
-});
-
-const icons = {
-  hospital: createIcon('%23e11d48'), // Red
-  clinic: createIcon('%234f46e5'), // Indigo
-  pharmacy: createIcon('%2316a34a') // Green
-};
 
 interface Place {
   id: string;
@@ -33,6 +19,13 @@ interface Place {
 interface MapPosition {
   lat: number;
   lng: number;
+}
+
+interface MapProps {
+  center: MapPosition;
+  zoom?: number;
+  markers?: Place[];
+  onMarkerClick?: (location: Place) => void;
 }
 
 function RoutingControl({ start, end }: { start: L.LatLng; end: L.LatLng }) {
@@ -127,7 +120,7 @@ export default function HealthcareMap() {
     
     try {
       setLoading(true);
-      const places = await searchNearbyPlaces(selectedType, 5000);
+      const places = await searchNearbyPlaces(userPosition, selectedType, 5000);
       setNearbyPlaces(places);
     } catch (err) {
       console.error('Search error:', err);
@@ -242,10 +235,12 @@ export default function HealthcareMap() {
             <Marker
               key={place.id}
               position={[place.lat, place.lon]}
-              icon={icons[place.type as keyof typeof icons]}
-              eventHandlers={{
-                click: () => setSelectedPlace(place),
-              }}
+              icon={new L.Icon({
+                iconUrl: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${place.type === 'hospital' ? '%23e11d48' : place.type === 'clinic' ? '%234f46e5' : '%2316a34a'}'%3E%3Cpath d='M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 12c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z'/%3E%3C/svg%3E`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+              })}
             >
               <Popup>
                 <div className="p-2">

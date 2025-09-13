@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { VideoLibrary } from '@/components/Resources/VideoLibrary';
 import { Webinars } from '@/components/Resources/Webinars';
 import { Podcasts } from '@/components/Resources/Podcasts';
-import { VirtualTours } from '@/components/Resources/VirtualTours';
+import VirtualTours from '@/components/Resources/VirtualTours';
 import { Forums } from '@/components/Resources/Forums';
 import { HealthGroups } from '@/components/Resources/HealthGroups';
 import { ChatRooms } from '@/components/Resources/ChatRooms';
@@ -121,11 +121,8 @@ export default function Resources() {
             />
           </TabsContent>
 
-          <TabsContent value="virtual-tours">
-            <VirtualTours
-              tours={mockTours}
-              onTourSelect={handleTourSelect}
-            />
+          <TabsContent value="virtual-tours" className="mt-6">
+            <VirtualTours />
           </TabsContent>
 
           <TabsContent value="forums">

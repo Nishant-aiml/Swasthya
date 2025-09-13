@@ -1,84 +1,64 @@
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
-import AyushmanApplication from '../components/AyushmanCard/AyushmanApplication';
-import AyushmanVerification from '../components/AyushmanCard/AyushmanVerification';
+import { useState } from 'react';
+import { AyushmanVerification } from '@/components/Profile/sections/AyushmanVerification';
+import { AyushmanRegistration } from '@/components/Profile/sections/AyushmanRegistration';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 
-export default function AyushmanCard() {
-  const [activeTab, setActiveTab] = useState('verify');
+interface RegistrationData {
+  // Add properties for registration data here
+}
+
+export default function AyushmanCardPage() {
+  const [isVerified, setIsVerified] = useState(false);
+  const [activeTab, setActiveTab] = useState('verification');
 
   const handleVerification = async (cardNumber: string, cardImage: File) => {
-    // TODO: Implement actual verification logic
-    return new Promise<boolean>((resolve) => {
-      setTimeout(() => resolve(true), 2000);
-    });
+    try {
+      // Mock verification process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setIsVerified(true);
+    } catch (error) {
+      console.error('Verification failed:', error);
+      throw error;
+    }
   };
 
-  const handleApplication = async (formData: FormData) => {
-    // TODO: Implement actual application submission logic
-    return new Promise<void>((resolve) => {
-      setTimeout(resolve, 2000);
-    });
+  const handleRegistration = async (data: RegistrationData) => {
+    try {
+      // Mock registration process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Registration data:', data);
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Ayushman Card Services</h1>
-        <p className="text-gray-600">
-          Apply for a new Ayushman card or verify your existing card for seamless healthcare access
-        </p>
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Ayushman Card</h1>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-6">
-          <TabsTrigger value="verify">Verify Card</TabsTrigger>
-          <TabsTrigger value="apply">Apply for Card</TabsTrigger>
+      <Tabs 
+        defaultValue={activeTab}
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="verification">Verify Card</TabsTrigger>
+          <TabsTrigger value="registration">Register New Card</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="verify" className="mt-6">
-          <AyushmanVerification
+        <TabsContent value="verification">
+          <AyushmanVerification 
             onVerify={handleVerification}
-            onSuccess={() => {
-              // Handle successful verification
-              console.log('Card verified successfully');
-            }}
+            onSuccess={() => setIsVerified(true)}
+            onError={(error) => console.error('Verification error:', error)}
           />
         </TabsContent>
 
-        <TabsContent value="apply" className="mt-6">
-          <AyushmanApplication
-            onSubmit={handleApplication}
-          />
+        <TabsContent value="registration">
+          <AyushmanRegistration onSubmit={handleRegistration} />
         </TabsContent>
       </Tabs>
-
-      <div className="mt-8 bg-emerald-50 p-4 rounded-lg">
-        <h3 className="font-semibold mb-2">About Ayushman Card</h3>
-        <p className="text-sm text-gray-700 mb-4">
-          The Ayushman Card provides healthcare coverage to eligible beneficiaries for secondary and tertiary care hospitalization. 
-          It offers a health cover of Rs. 5 lakhs per family per year for medical treatment in empanelled hospitals.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <h4 className="font-medium mb-2">Benefits:</h4>
-            <ul className="list-disc list-inside space-y-1 text-gray-600">
-              <li>Cashless and paperless treatment</li>
-              <li>Coverage for pre and post hospitalization expenses</li>
-              <li>No restriction on family size or age</li>
-              <li>All pre-existing conditions covered</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium mb-2">Required Documents:</h4>
-            <ul className="list-disc list-inside space-y-1 text-gray-600">
-              <li>Aadhaar Card</li>
-              <li>Proof of residence</li>
-              <li>Recent passport size photograph</li>
-              <li>Mobile number for OTP verification</li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </div>
   );
-};
+}

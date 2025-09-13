@@ -55,11 +55,14 @@ export default function DoctorComparison({ doctors, onClose }: DoctorComparisonP
     {
       label: 'Languages',
       getValue: (doctor: Doctor) => (
-        <div className="flex flex-wrap gap-1">
-          {doctor.languages.map((lang) => (
-            <Badge key={lang} variant="secondary" className="text-xs">
-              {lang}
-            </Badge>
+        <div className="flex flex-wrap gap-2">
+          {doctor.languages?.map((language, index) => (
+            <span
+              key={index}
+              className="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded"
+            >
+              {language}
+            </span>
           ))}
         </div>
       ),
@@ -78,11 +81,11 @@ export default function DoctorComparison({ doctors, onClose }: DoctorComparisonP
       label: 'Available Slots',
       getValue: (doctor: Doctor) => (
         <div className="space-y-1">
-          {doctor.availableSlots.map((slot, index) => (
+          {doctor.availableSlots?.map((slot, index) => (
             <div key={index} className="text-sm">
               {slot.date}: {slot.slots.length} slots
             </div>
-          ))}
+          )) || <div className="text-sm">0 slots</div>}
         </div>
       ),
     },

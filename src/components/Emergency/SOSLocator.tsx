@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Navigation } from 'lucide-react';
-import EmergencyServicesMap from '../Maps/EmergencyServicesMap';
+import HealthcareMap from '../Maps/HealthcareMap';
 
 const SOSLocator: React.FC = () => {
   return (
@@ -19,7 +19,7 @@ const SOSLocator: React.FC = () => {
         </div>
         
         <div className="h-[600px]">
-          <EmergencyServicesMap />
+          <HealthcareMap height="600px" />
         </div>
       </div>
     </div>

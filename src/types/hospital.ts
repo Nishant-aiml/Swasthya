@@ -1,38 +1,35 @@
+import { Location } from './location';
+import { Doctor } from './doctor';
+
 export interface Hospital {
   id: string;
   name: string;
   type: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    pincode: string;
-    landmark: string;
-    country?: string;
-  };
-  location: {
-    lat: number;
-    lng: number;
-  };
+  address: string;
+  location: Location;
   contact: {
-    phone: string;
+    phone: string[];
     email: string;
-    website: string;
   };
-  facilities: {
+  ratings: {
+    overall: number;
+    cleanliness: number;
+    staffBehavior: number;
+    waitingTime: number;
+    facilities: number;
+  };
+  departments: {
+    id: string;
     name: string;
-    doctors: number;
-    services: string[];
   }[];
-  departments: string[];
+  doctors: Doctor[];
+  facilities: string[];
+  specialties: string[];
   emergencyServices: {
     available24x7: boolean;
-    ambulanceNumber: string;
+    ambulanceService: boolean;
     traumaCenter: boolean;
   };
-  acceptsAyushman: boolean;
-  rating: number;
-  reviewCount: number;
   imageUrl: string;
-  doctors: string[];
+  reviewCount: number;
 }

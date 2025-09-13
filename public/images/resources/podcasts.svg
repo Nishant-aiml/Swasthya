@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f0f9ff"/>
+  <g transform="translate(250,150)">
+    <rect x="0" y="0" width="300" height="200" rx="15" fill="#3b82f6"/>
+    <circle cx="150" cy="80" r="35" fill="white"/>
+    <path d="M130,70 v20 M170,70 v20 M130,90 q20,10 40,0" stroke="#3b82f6" stroke-width="6" fill="none"/>
+    <path d="M140,130 q10,10 20,0 M145,140 q5,5 10,0" stroke="white" stroke-width="4" fill="none">
+      <animate attributeName="d" values="M140,130 q10,10 20,0;M140,135 q10,-5 20,0;M140,130 q10,10 20,0" dur="1.5s" repeatCount="indefinite"/>
+    </path>
+    <text x="150" y="240" text-anchor="middle" fill="#1e40af" font-family="Arial" font-size="24">Podcasts</text>
+  </g>
+</svg>

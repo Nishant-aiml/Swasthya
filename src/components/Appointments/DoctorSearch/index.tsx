@@ -1,203 +1,240 @@
-import React, { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/Input';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/Sheet';
-import { useToast } from '@/components/ui/use-toast';
-import { Search, Sliders } from 'lucide-react';
-import VoiceSearch from './VoiceSearch';
-import SearchFilters from './SearchFilters';
-import SearchHistory from './SearchHistory';
+import { Input } from '@/components/ui/Input';
+import { Slider } from '@/components/ui/Slider';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { Label } from '@/components/ui/Label';
+import { doctors, specializations, locations } from '@/data/doctor-data';
 import DoctorCard from './DoctorCard';
-import type { SearchFilters as SearchFiltersType, SearchHistory as SearchHistoryType, SavedSearch, DoctorSearchResult } from '@/types/search';
+import { Search, Mic, SlidersHorizontal } from 'lucide-react';
+import VoiceSearch from './VoiceSearch';
+import SearchHistory from './SearchHistory';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/Sheet";
+import { Dialog, DialogContent } from '@/components/ui/Dialog';
+import AppointmentBooking from '../AppointmentBooking';
+import { toast } from 'sonner';
+import { Doctor } from '@/types/doctor';
 
-export default function DoctorSearch() {
-  const { toast } = useToast();
+export interface DoctorSearchProps {
+  onDoctorsFound?: (doctors: Doctor[]) => void;
+}
+
+const DoctorSearch: React.FC<DoctorSearchProps> = ({ onDoctorsFound }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<SearchFiltersType>({});
-  const [recentSearches, setRecentSearches] = useState<SearchHistoryType[]>([]);
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
-  const [searchResults, setSearchResults] = useState<DoctorSearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [selectedSpecialization, setSelectedSpecialization] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [minimumRating, setMinimumRating] = useState(0);
+  const [acceptsAyushman, setAcceptsAyushman] = useState(false);
+  const [filteredDoctors, setFilteredDoctors] = useState(doctors);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [showBooking, setShowBooking] = useState(false);
 
-  // Load search history from localStorage on mount
-  useEffect(() => {
-    const loadedRecent = localStorage.getItem('recentSearches');
-    const loadedSaved = localStorage.getItem('savedSearches');
+  const filterDoctors = useCallback(() => {
+    const filtered = doctors.filter(doctor => {
+      const matchesSearch = doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          doctor.specialization.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSpecialization = !selectedSpecialization || doctor.specialization === selectedSpecialization;
+      const matchesLocation = !selectedLocation || doctor.location.address.includes(selectedLocation);
+      const matchesRating = doctor.rating >= minimumRating;
+      const matchesAyushman = !acceptsAyushman || doctor.acceptsAyushmanCard;
 
-    if (loadedRecent) {
-      setRecentSearches(JSON.parse(loadedRecent));
-    }
-    if (loadedSaved) {
-      setSavedSearches(JSON.parse(loadedSaved));
-    }
-  }, []);
-
-  // Save search history to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
-  }, [recentSearches]);
-
-  useEffect(() => {
-    localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
-  }, [savedSearches]);
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim() && Object.keys(filters).length === 0) {
-      toast({
-        title: "Search Query Required",
-        description: "Please enter a search term or apply filters",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Add to recent searches
-      if (searchQuery.trim()) {
-        const newSearch: SearchHistoryType = {
-          query: searchQuery,
-          timestamp: new Date().toISOString(),
-          filters: Object.keys(filters).length > 0 ? filters : undefined
-        };
-
-        setRecentSearches(prev => {
-          const filtered = prev.filter(s => s.query !== searchQuery);
-          return [newSearch, ...filtered].slice(0, 10);
-        });
-      }
-
-      // TODO: Implement actual API call here
-      // For now, we'll simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock results
-      setSearchResults([
-        // Add mock results here
-      ]);
-    } catch (error) {
-      toast({
-        title: "Search Failed",
-        description: "Failed to fetch search results. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVoiceSearchResult = (transcript: string) => {
-    setSearchQuery(transcript);
-    handleSearch();
-  };
-
-  const handleVoiceSearchError = (error: string) => {
-    toast({
-      title: "Voice Search Error",
-      description: error,
-      variant: "destructive",
+      return matchesSearch && matchesSpecialization && matchesLocation && matchesRating && matchesAyushman;
     });
+
+    setFilteredDoctors(filtered);
+    onDoctorsFound?.(filtered);
+  }, [searchQuery, selectedSpecialization, selectedLocation, minimumRating, acceptsAyushman]);
+
+  useEffect(() => {
+    filterDoctors();
+  }, [filterDoctors]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query && !searchHistory.includes(query)) {
+      setSearchHistory(prev => [query, ...prev].slice(0, 5));
+    }
   };
 
-  const handleSaveFilters = () => {
-    const name = searchQuery || 'Saved Search ' + (savedSearches.length + 1);
-    const newSavedSearch: SavedSearch = {
-      id: Date.now().toString(),
-      name,
-      timestamp: new Date().toISOString(),
-      filters
-    };
-
-    setSavedSearches(prev => [...prev, newSavedSearch]);
-    toast({
-      title: "Filters Saved",
-      description: "Your search filters have been saved for future use.",
-    });
+  const handleVoiceSearch = (transcript: string) => {
+    handleSearch(transcript);
   };
 
-  const handleRemoveSavedSearch = (id: string) => {
-    setSavedSearches(prev => prev.filter(s => s.id !== id));
-    toast({
-      title: "Search Removed",
-      description: "The saved search has been removed.",
-    });
+  const handleBookAppointment = (doctor: Doctor) => {
+    setSelectedDoctor(doctor);
+    setShowBooking(true);
+  };
+
+  const handleBookingSubmit = (appointmentData: any) => {
+    console.log('Booking appointment:', appointmentData);
+    toast.success('Appointment booked successfully!');
+    setShowBooking(false);
   };
 
   return (
     <div className="space-y-6">
-      {/* Search Bar */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search doctors by name, specialization, or hospital..."
-            className="pl-10 pr-4"
-          />
-        </div>
-        <VoiceSearch
-          onResult={handleVoiceSearchResult}
-          onError={handleVoiceSearchError}
-        />
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Sliders className="h-4 w-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SearchFilters
-              filters={filters}
-              onFilterChange={setFilters}
-              onSaveFilters={handleSaveFilters}
+      <div className="space-y-4">
+        {/* Search Bar */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              type="text"
+              placeholder="Search by doctor name or specialization"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-10"
             />
-          </SheetContent>
-        </Sheet>
-        <Button onClick={handleSearch} disabled={isLoading}>
-          Search
-        </Button>
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+          </div>
+          <VoiceSearch onResult={handleVoiceSearch} />
+          <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon">
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Filter Results</SheetTitle>
+              </SheetHeader>
+              <div className="space-y-6 py-4">
+                {/* Specialization Filter */}
+                <div className="space-y-2">
+                  <Label>Specialization</Label>
+                  <Select
+                    value={selectedSpecialization}
+                    onValueChange={setSelectedSpecialization}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Specialization" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Specializations</SelectItem>
+                      {specializations.map((spec) => (
+                        <SelectItem key={spec} value={spec}>
+                          {spec}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Location Filter */}
+                <div className="space-y-2">
+                  <Label>Location</Label>
+                  <Select
+                    value={selectedLocation}
+                    onValueChange={setSelectedLocation}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Locations</SelectItem>
+                      {locations.map((loc, index) => (
+                        <SelectItem key={`location-${index}`} value={loc.toString()}>
+                          {loc.toString()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Rating Filter */}
+                <div className="space-y-2">
+                  <Label>Minimum Rating</Label>
+                  <Slider
+                    value={[minimumRating]}
+                    onValueChange={([value]) => setMinimumRating(value)}
+                    min={0}
+                    max={5}
+                    step={0.5}
+                  />
+                  <div className="text-sm text-gray-500">
+                    {minimumRating} stars and above
+                  </div>
+                </div>
+
+                {/* Ayushman Card Filter */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="ayushman"
+                    checked={acceptsAyushman}
+                    onCheckedChange={(checked) => setAcceptsAyushman(!!checked)}
+                  />
+                  <Label
+                    htmlFor="ayushman"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Accepts Ayushman Card
+                  </Label>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Search History */}
+        {searchHistory.length > 0 && (
+          <SearchHistory
+            history={searchHistory}
+            onSelect={handleSearch}
+            onClear={() => setSearchHistory([])}
+          />
+        )}
       </div>
 
-      {/* Search History */}
-      {(recentSearches.length > 0 || savedSearches.length > 0) && !searchResults.length && (
-        <SearchHistory
-          recentSearches={recentSearches}
-          savedSearches={savedSearches}
-          onSelectSearch={(query, searchFilters) => {
-            setSearchQuery(query);
-            if (searchFilters) {
-              setFilters(searchFilters);
-            }
-            handleSearch();
-          }}
-          onSaveSearch={(search) => {
-            const newSavedSearch: SavedSearch = {
-              id: Date.now().toString(),
-              name: search.query,
-              timestamp: new Date().toISOString(),
-              filters: search.filters || {}
-            };
-            setSavedSearches(prev => [...prev, newSavedSearch]);
-          }}
-          onRemoveSavedSearch={handleRemoveSavedSearch}
-        />
-      )}
+      {/* Results Count */}
+      <div className="text-sm text-gray-600">
+        Found {filteredDoctors.length} doctor{filteredDoctors.length !== 1 ? 's' : ''}
+      </div>
 
-      {/* Search Results */}
-      {isLoading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
-          <p className="mt-2 text-sm text-gray-600">Searching for doctors...</p>
-        </div>
-      ) : searchResults.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {searchResults.map((doctor) => (
-            <DoctorCard key={doctor.id} doctor={doctor} />
-          ))}
-        </div>
-      ) : null}
+      {/* Results Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredDoctors.length > 0 ? (
+          filteredDoctors.map((doctor) => (
+            <DoctorCard 
+              key={doctor.id} 
+              doctor={doctor} 
+              onBookAppointment={handleBookAppointment}
+            />
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            No doctors found matching your criteria
+          </div>
+        )}
+      </div>
+
+      {/* Appointment Booking Dialog */}
+      {showBooking && selectedDoctor && (
+        <Dialog open={showBooking} onOpenChange={setShowBooking}>
+          <DialogContent className="max-w-2xl">
+            <AppointmentBooking
+              doctor={selectedDoctor}
+              onClose={() => setShowBooking(false)}
+              onBook={handleBookingSubmit}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
-}
+};
+
+export default DoctorSearch;

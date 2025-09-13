@@ -1,97 +1,114 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/Card';
-import { Button } from '../../ui/Button';
-import { Input } from '../../ui/Input';
-import { Label } from '../../ui/Label';
-import { CreditCard, FileText, Hospital, History } from 'lucide-react';
+import { useState } from 'react';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { HeartPulse, CreditCard, CheckCircle, AlertTriangle } from 'lucide-react';
 
-export function AyushmanIntegration() {
+interface AyushmanIntegrationProps {
+  onVerify: (cardNumber: string) => Promise<boolean>;
+}
+
+export default function AyushmanIntegration({ onVerify }: AyushmanIntegrationProps) {
+  const [cardNumber, setCardNumber] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleVerify = async () => {
+    if (!cardNumber.trim()) {
+      setError('Please enter your Ayushman card number');
+      return;
+    }
+
+    setIsVerifying(true);
+    setError('');
+
+    try {
+      const verified = await onVerify(cardNumber);
+      setIsVerified(verified);
+      if (!verified) {
+        setError('Invalid card number. Please check and try again.');
+      }
+    } catch (err) {
+      setError('Failed to verify card. Please try again later.');
+      setIsVerified(false);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Ayushman Card Integration</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="p-4 border rounded-lg bg-gray-50">
-          <div className="flex items-center space-x-4">
-            <CreditCard className="w-8 h-8 text-primary" />
-            <div>
-              <h3 className="font-semibold">Digital Ayushman Card</h3>
-              <p className="text-sm text-gray-500">Card Number: XXXX-XXXX-XXXX</p>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold">Ayushman Card Integration</h2>
+        <p className="text-gray-600">
+          Link your Ayushman card to access healthcare benefits
+        </p>
+      </div>
 
+      <Card className="p-6">
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Benefits and Coverage</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-3 border rounded-lg">
-                <p className="font-medium">Annual Coverage</p>
-                <p className="text-2xl font-bold">₹5,00,000</p>
-              </div>
-              <div className="p-3 border rounded-lg">
-                <p className="font-medium">Family Members</p>
-                <p className="text-2xl font-bold">5</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <HeartPulse className="h-5 w-5 text-blue-500" />
+            <div>
+              <h3 className="font-medium">Ayushman Bharat</h3>
+              <p className="text-sm text-gray-600">
+                Universal health coverage for all citizens
+              </p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Recent Claims</Label>
-            <div className="space-y-2">
-              {[
-                { date: '2024-12-15', hospital: 'City Hospital', amount: '₹25,000', status: 'Approved' },
-                { date: '2024-11-20', hospital: 'Metro Clinic', amount: '₹15,000', status: 'Processing' }
-              ].map((claim, index) => (
-                <div key={index} className="flex justify-between items-center p-2 border rounded">
-                  <div>
-                    <p className="font-medium">{claim.hospital}</p>
-                    <p className="text-sm text-gray-500">{claim.date}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{claim.amount}</p>
-                    <p className={`text-sm ${
-                      claim.status === 'Approved' ? 'text-green-600' : 'text-orange-600'
-                    }`}>
-                      {claim.status}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <label className="text-sm font-medium">Card Number</label>
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                value={cardNumber}
+                onChange={(e) => setCardNumber(e.target.value)}
+                placeholder="Enter your Ayushman card number"
+                className="flex-1"
+              />
+              <Button
+                onClick={handleVerify}
+                disabled={isVerifying}
+              >
+                {isVerifying ? 'Verifying...' : 'Verify'}
+              </Button>
             </div>
+            {error && (
+              <p className="text-sm text-red-500 flex items-center gap-1">
+                <AlertTriangle className="h-4 w-4" />
+                {error}
+              </p>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <Label>Policy Details</Label>
-            <div className="space-y-2">
-              <div className="flex justify-between p-2 border rounded">
-                <span>Policy Number</span>
-                <span className="font-medium">AY-2024-123456</span>
-              </div>
-              <div className="flex justify-between p-2 border rounded">
-                <span>Valid Until</span>
-                <span className="font-medium">31 Dec 2025</span>
-              </div>
-              <div className="flex justify-between p-2 border rounded">
-                <span>Coverage Type</span>
-                <span className="font-medium">Family Floater</span>
-              </div>
+          {isVerified && (
+            <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+              <CheckCircle className="h-5 w-5" />
+              <span>Card verified successfully!</span>
             </div>
+          )}
+
+          <div className="space-y-3 mt-6">
+            <h4 className="font-medium">Benefits</h4>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Cashless treatment at empaneled hospitals
+              </li>
+              <li className="flex items-center gap-2">
+                <HeartPulse className="h-4 w-4" />
+                Coverage up to ₹5 lakhs per family per year
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Access to quality healthcare services
+              </li>
+            </ul>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" className="flex items-center justify-center">
-            <FileText className="w-4 h-4 mr-2" />
-            View Policy
-          </Button>
-          <Button variant="outline" className="flex items-center justify-center">
-            <History className="w-4 h-4 mr-2" />
-            Claim History
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

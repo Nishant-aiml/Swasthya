@@ -3,25 +3,30 @@ import { create } from 'zustand';
 interface EmergencyContact {
   id: string;
   name: string;
-  phone: string;
   relationship: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  notes?: string;
 }
 
 interface EmergencyContactState {
   contacts: EmergencyContact[];
+  selectedContact: EmergencyContact | null;
+  isLoading: boolean;
+  error: string | null;
   addContact: (contact: Omit<EmergencyContact, 'id'>) => void;
-  removeContact: (id: string) => void;
-  notifyContacts: (data: {
-    userId: string;
-    serviceId: string;
-    serviceName: string;
-    location: [number, number] | null;
-    timestamp: string;
-  }) => Promise<void>;
+  updateContact: (id: string, contact: Partial<EmergencyContact>) => void;
+  deleteContact: (id: string) => void;
+  selectContact: (contact: EmergencyContact) => void;
+  loadContacts: () => Promise<void>;
 }
 
-export const useEmergencyContacts = create<EmergencyContactState>((set, get) => ({
+const useEmergencyContacts = create<EmergencyContactState>((set, get) => ({
   contacts: [],
+  selectedContact: null,
+  isLoading: false,
+  error: null,
 
   addContact: (contact) => {
     const newContact = {
@@ -33,19 +38,49 @@ export const useEmergencyContacts = create<EmergencyContactState>((set, get) => 
     }));
   },
 
-  removeContact: (id) => {
+  updateContact: (id: string, contact: Partial<EmergencyContact>) => {
+    set((state) => ({
+      contacts: state.contacts.map((c) =>
+        c.id === id ? { ...c, ...contact } : c
+      ),
+    }));
+  },
+
+  deleteContact: (id: string) => {
     set((state) => ({
       contacts: state.contacts.filter((contact) => contact.id !== id),
     }));
   },
 
-  notifyContacts: async (data) => {
-    const { contacts } = get();
-    
-    // In a real app, this would make API calls to send notifications
-    // For now, we'll just log the notification
-    contacts.forEach((contact) => {
-      console.log(`Notifying ${contact.name} about emergency at ${data.serviceName}`);
-    });
+  selectContact: (contact: EmergencyContact) => {
+    set({ selectedContact: contact });
+  },
+
+  loadContacts: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      // Simulate API call
+      const mockContacts: EmergencyContact[] = [
+        {
+          id: '1',
+          name: 'John Doe',
+          relationship: 'Father',
+          phone: '+1234567890',
+          email: 'john@example.com',
+        },
+        {
+          id: '2',
+          name: 'Jane Doe',
+          relationship: 'Mother',
+          phone: '+0987654321',
+          email: 'jane@example.com',
+        },
+      ];
+      set({ contacts: mockContacts, isLoading: false });
+    } catch (error) {
+      set({ error: 'Failed to load contacts', isLoading: false });
+    }
   },
 }));
+
+export default useEmergencyContacts;

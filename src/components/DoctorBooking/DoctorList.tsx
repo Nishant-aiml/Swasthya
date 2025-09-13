@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { 
   Search, Mic, MicOff, CreditCard, SlidersHorizontal, 
@@ -26,10 +26,10 @@ import { Switch } from '@/components/ui/Switch';
 import { useToast } from '@/hooks/useToast';
 import { useDoctors } from '@/hooks/useDoctors';
 import type { Doctor } from '@/types/doctor';
-import DoctorCard from './DoctorCard';
+import { DoctorCard } from './DoctorCard';
 import DoctorComparison from './DoctorComparison';
 
-type SortOption = 'rating' | 'experience' | 'fee-low' | 'fee-high';
+export type SortOption = 'rating' | 'experience' | 'fee';
 
 interface Filters {
   languages: string[];
@@ -38,8 +38,32 @@ interface Filters {
   specialization: string;
 }
 
-export default function DoctorList() {
-  const { doctors, loading, error } = useDoctors();
+interface DoctorListProps {
+  doctors: Doctor[];
+  onBookAppointment: (doctor: Doctor, date: Date) => void;
+  onViewDetails: (doctor: Doctor) => void;
+  onToggleFavorite?: (doctor: Doctor) => void;
+}
+
+interface DoctorCardProps {
+  doctor: Doctor;
+  onBookAppointment: (date: Date) => void;
+  onViewDetails: (doctor: Doctor) => void;
+  onToggleFavorite?: (doctor: Doctor) => void;
+}
+
+export function DoctorList({
+  doctors,
+  onBookAppointment,
+  onViewDetails,
+  onToggleFavorite
+}: DoctorListProps) {
+  const { ref, inView } = useInView({
+    threshold: 0.1,
+    triggerOnce: true,
+  });
+  const { toast } = useToast();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('rating');
   const [filters, setFilters] = useState<Filters>({
@@ -50,68 +74,53 @@ export default function DoctorList() {
   });
   const [selectedDoctors, setSelectedDoctors] = useState<Doctor[]>([]);
   const [isVoiceSearchActive, setIsVoiceSearchActive] = useState(false);
-  const { ref, inView } = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
-  const { toast } = useToast();
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
 
   // Get unique values for filters
   const allLanguages = Array.from(
-    new Set(doctors.flatMap((d) => d.languages))
-  ).sort();
+    new Set(doctors.flatMap((d) => d.languages || []))
+  ).filter(Boolean).sort();
   const allSpecializations = Array.from(
     new Set(doctors.map((d) => d.specialization))
   ).sort();
   const maxConsultationFee = Math.max(
-    ...doctors.map((d) => d.consultationFee)
+    ...doctors.map((d) => d.consultationFee ?? 0)
   );
 
   // Filter and sort doctors
-  const filteredDoctors = doctors
-    .filter((doctor) => {
-      const matchesSearch =
-        searchQuery === '' ||
-        doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doctor.specialization.toLowerCase().includes(searchQuery.toLowerCase());
+  const handleSortChange = (value: SortOption) => {
+    setSortBy(value);
+    let sorted = [...doctors];
+    switch (value) {
+      case 'rating':
+        sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+        break;
+      case 'experience':
+        sorted.sort((a, b) => (b.experience ?? 0) - (a.experience ?? 0));
+        break;
+      case 'fee':
+        sorted.sort((a, b) => (a.consultationFee ?? 0) - (b.consultationFee ?? 0));
+        break;
+    }
+    setFilteredDoctors(sorted);
+  };
 
-      const matchesLanguages =
-        filters.languages.length === 0 ||
-        filters.languages.every((lang) =>
-          doctor.languages.includes(lang)
-        );
-
-      const matchesAyushman =
-        !filters.acceptsAyushman || doctor.acceptsAyushman;
-
-      const matchesFee = doctor.consultationFee <= filters.maxFee;
-
-      const matchesSpecialization =
-        filters.specialization === '' ||
-        doctor.specialization === filters.specialization;
-
-      return (
-        matchesSearch &&
-        matchesLanguages &&
-        matchesAyushman &&
-        matchesFee &&
-        matchesSpecialization
-      );
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'rating':
-          return b.rating - a.rating;
-        case 'experience':
-          return b.experience - a.experience;
-        case 'fee-low':
-          return a.consultationFee - b.consultationFee;
-        case 'fee-high':
-          return b.consultationFee - a.consultationFee;
-        default:
-          return 0;
-      }
+  const handleLanguageFilter = (selectedLangs: string[]) => {
+    setFilters(prev => ({ ...prev, languages: selectedLangs }));
+    const filtered = doctors.filter(doctor => {
+      if (!selectedLangs.length) return true;
+      return doctor.languages?.some(lang => selectedLangs.includes(lang)) || false;
     });
+    setFilteredDoctors(filtered);
+  };
+
+  const handleLanguageClick = (lang: string) => {
+    const newLanguages = filters.languages.includes(lang)
+      ? filters.languages.filter(l => l !== lang)
+      : [...filters.languages, lang];
+    handleLanguageFilter(newLanguages);
+  };
 
   const handleDoctorSelect = (doctor: Doctor) => {
     setSelectedDoctors((prev) => {
@@ -137,6 +146,20 @@ export default function DoctorList() {
       title: "Voice Search",
       description: `Searching for: "${transcript}"`,
     });
+  };
+
+  const toggleFavorite = (doctorId: string) => {
+    setFavorites(prev =>
+      prev.includes(doctorId)
+        ? prev.filter(id => id !== doctorId)
+        : [...prev, doctorId]
+    );
+  };
+
+  const handleBookAppointmentForDoctor = (doctor: Doctor) => {
+    return (date: Date) => {
+      onBookAppointment(doctor, date);
+    };
   };
 
   return (
@@ -167,15 +190,17 @@ export default function DoctorList() {
             </div>
           </div>
 
-          <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-            <SelectTrigger className="w-[200px]">
+          <Select
+            value={sortBy}
+            onValueChange={handleSortChange}
+          >
+            <SelectTrigger>
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="rating">Highest Rated</SelectItem>
-              <SelectItem value="experience">Most Experienced</SelectItem>
-              <SelectItem value="fee-low">Lowest Fee</SelectItem>
-              <SelectItem value="fee-high">Highest Fee</SelectItem>
+              <SelectItem value="rating">Rating</SelectItem>
+              <SelectItem value="experience">Experience</SelectItem>
+              <SelectItem value="fee">Price</SelectItem>
             </SelectContent>
           </Select>
 
@@ -227,14 +252,7 @@ export default function DoctorList() {
                             : 'outline'
                         }
                         className="cursor-pointer"
-                        onClick={() =>
-                          setFilters({
-                            ...filters,
-                            languages: filters.languages.includes(lang)
-                              ? filters.languages.filter((l) => l !== lang)
-                              : [...filters.languages, lang],
-                          })
-                        }
+                        onClick={() => handleLanguageClick(lang)}
                       >
                         {lang}
                       </Badge>
@@ -312,38 +330,34 @@ export default function DoctorList() {
         {/* Doctor Cards */}
         <div className="grid grid-cols-1 gap-6" ref={ref}>
           {filteredDoctors.map((doctor) => (
-            <DoctorCard
-              key={doctor.id}
-              doctor={doctor}
-              onFavoriteToggle={(doctorId, isFavorite) => {
-                toast({
-                  title: isFavorite ? 'Added to Favorites' : 'Removed from Favorites',
-                  description: `Dr. ${doctor.name} has been ${
-                    isFavorite ? 'added to' : 'removed from'
-                  } your favorites`,
-                });
-              }}
-              onAppointmentBooked={(details) => {
-                toast({
-                  title: 'Appointment Booked',
-                  description: `Your appointment with Dr. ${
-                    doctor.name
-                  } has been confirmed for ${details.date} at ${details.time}`,
-                });
-              }}
-              isSelected={selectedDoctors.some((d) => d.id === doctor.id)}
-              onSelect={() => handleDoctorSelect(doctor)}
-            />
+            <div key={doctor.id}>
+              <div className="flex flex-wrap gap-2">
+                {doctor.languages?.map((language, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded"
+                  >
+                    {language}
+                  </span>
+                ))}
+              </div>
+              <DoctorCard
+                doctor={doctor}
+                onBookAppointment={handleBookAppointmentForDoctor(doctor)}
+                onViewDetails={() => onViewDetails(doctor)}
+                onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(doctor) : undefined}
+              />
+            </div>
           ))}
         </div>
 
         {/* Loading and Error States */}
-        {loading && (
+        {false && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
           </div>
         )}
-        {error && (
+        {false && (
           <div className="text-center py-8 text-red-500">
             Error loading doctors. Please try again.
           </div>

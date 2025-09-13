@@ -1,38 +1,80 @@
-export interface Review {
+import { Address, Review } from './index';
+
+export interface Location {
+  address: string;
+  city: string;
+  state: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  country?: string;
+}
+
+export interface DoctorReview {
   id: string;
-  doctorId: string;
-  patientName: string;
   rating: number;
   comment: string;
+  patientName: string;
   date: string;
-  isVerified?: boolean;
+  metrics: {
+    punctuality: number;
+    communication: number;
+    treatment: number;
+  };
+  verified?: boolean;
+  helpful?: number;
+  treatmentType?: string;
 }
 
 export interface Doctor {
   id: string;
   name: string;
+  specialty: string;
   specialization: string;
   experience: number;
-  qualifications: string[];
-  hospitalName: string;
-  location: {
-    address: string;
-    lat: number;
-    lng: number;
-    landmark: string;
-  };
-  languages: string[];
-  consultationFee: number;
-  availableSlots: Array<{
-    date: string;
-    slots: string[];
-  }>;
-  acceptsAyushman: boolean;
   rating: number;
   reviewCount: number;
-  imageUrl: string;
-  isAvailableOnline: boolean;
-  reviews?: Review[];
+  qualifications: string[];
+  reviews?: DoctorReview[];
+  education?: {
+    degree: string;
+    institution: string;
+    year: number;
+  }[];
+  awards?: {
+    title: string;
+    organization: string;
+    year: number;
+  }[];
+  subspecialties?: string[];
+  expertise?: string[];
+  location: Location;
+  availableSlots?: {
+    date: string;
+    slots: string[];
+  }[];
+  imageUrl?: string;
+  languages?: string[];
+  fees?: {
+    consultation: number;
+    followUp: number;
+  };
+  consultationFee?: number;
+  about?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  hospitalName?: string;
+  isAvailableOnline?: boolean;
+  acceptsAyushman?: boolean;
+  acceptsAyushmanCard?: boolean;
+  publications?: string[];
+}
+
+export interface TimeSlot {
+  date: string;
+  slots: string[];
 }
 
 export interface Appointment {

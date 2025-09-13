@@ -1,15 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
+import axios from 'axios';
+
+// API configuration
+const HF_API_KEY = import.meta.env.REACT_APP_HUGGING_FACE_KEY;
+const HF_API_URL = import.meta.env.VITE_AI_MODEL_ENDPOINT;
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'ai';
   timestamp: Date;
+  error?: boolean;
 }
-
-const GOOGLE_API_KEY = 'AIzaSyCD5oDaMB4u1JUostP6xuHUBjt2GZh9n8M';
-const API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
 export default function HealthAIChat() {
   const [messages, setMessages] = useState<Message[]>([
@@ -34,35 +37,93 @@ export default function HealthAIChat() {
 
   const generateResponse = async (userMessage: string) => {
     try {
-      const response = await fetch(`${API_ENDPOINT}?key=${GOOGLE_API_KEY}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `You are a helpful and knowledgeable AI health assistant. 
-                     Respond to the following health-related query in a professional and accurate manner: ${userMessage}`
-            }]
-          }]
-        }),
-      });
+      // Use Hugging Face API
+      const apiKey = HF_API_KEY;
+      const apiUrl = HF_API_URL;
 
-      if (!response.ok) {
-        throw new Error('Failed to get response from AI');
+      // Validate API configuration
+      if (!apiKey) {
+        throw new Error('API key is missing. Please check your configuration.');
       }
 
-      const data = await response.json();
-      return data.candidates[0].content.parts[0].text;
+      const systemPrompt = `You are a professional AI health assistant. Your responses should be evidence-based, accurate, and include specific recommendations while clearly stating when professional medical attention is needed.`;
+
+      const requestPayload = {
+        inputs: `${systemPrompt}\n\nUser: ${userMessage.trim()}\nAssistant:`,
+        parameters: {
+          max_length: 500,
+          temperature: 0.7,
+          top_p: 0.9,
+          do_sample: true
+        }
+      };
+
+      const response = await axios.post(
+        apiUrl,
+        requestPayload,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000
+        }
+      );
+
+      // Enhanced response validation
+      if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
+        throw new Error('No response received from the AI service.');
+      }
+
+      let aiResponse = response.data[0].generated_text;
+      
+      // Remove the system prompt and user message from the response
+      aiResponse = aiResponse.replace(systemPrompt, '').replace(`User: ${userMessage.trim()}\nAssistant:`, '').trim();
+      
+      // Format the response for better readability
+      aiResponse = aiResponse
+        .trim()
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/^\s+/gm, '') // Remove leading whitespace from each line
+        .replace(/\s+$/gm, ''); // Remove trailing whitespace from each line
+
+      // Add disclaimer if response doesn't already include one
+      if (!aiResponse.toLowerCase().includes('medical professional') && 
+          !aiResponse.toLowerCase().includes('healthcare provider')) {
+        aiResponse += '\n\nNote: This information is for general guidance only. Please consult a healthcare provider for professional medical advice.';
+      }
+
+      return aiResponse;
     } catch (error) {
-      console.error('Error:', error);
-      return 'I apologize, but I encountered an error. Please try again later.';
+      console.error('Error generating AI response:', error);
+      
+      // Enhanced error handling with specific messages
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          throw new Error('Request timed out. Please try again.');
+        } else if (error.response?.status === 404) {
+          console.error('API Endpoint Error:', error.response?.data);
+          throw new Error('API endpoint not found. Please verify the API URL configuration.');
+        } else if (error.response?.status === 429) {
+          throw new Error('Too many requests. Please wait a moment and try again.');
+        } else if (error.response?.status === 401 || error.response?.status === 403) {
+          console.error('API Key Error:', error.response?.data);
+          throw new Error('Authentication failed. Please ensure your API key is valid and has sufficient permissions.');
+        } else if (error.response?.status === 400) {
+          console.error('Request Error:', error.response?.data);
+          throw new Error('Invalid request format. Please try again with a different query.');
+        } else if (!error.response) {
+          throw new Error('Network error. Please check your internet connection.');
+        }
+      }
+      
+      console.error('Unexpected error:', error);
+      throw new Error('An unexpected error occurred. Please contact support if the issue persists.');
     }
   };
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -75,17 +136,29 @@ export default function HealthAIChat() {
     setInputMessage('');
     setIsLoading(true);
 
-    const aiResponse = await generateResponse(inputMessage);
-    
-    const aiMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      text: aiResponse,
-      sender: 'ai',
-      timestamp: new Date(),
-    };
+    try {
+      const aiResponse = await generateResponse(inputMessage);
+      
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: aiResponse,
+        sender: 'ai',
+        timestamp: new Date(),
+      };
 
-    setMessages(prev => [...prev, aiMessage]);
-    setIsLoading(false);
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
+        sender: 'ai',
+        timestamp: new Date(),
+        error: true
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -172,4 +245,4 @@ export default function HealthAIChat() {
       </div>
     </div>
   );
-} 
+}

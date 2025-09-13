@@ -1,197 +1,259 @@
-import React, { useState } from 'react';
-import { Building2, Ambulance, CreditCard, Bed, Package, Star, Phone, MapPin, Search } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { ScrollArea } from '@/components/ui/ScrollArea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { MapPin, Phone, Star, Bed, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/Dialog';
-import type { Hospital } from '@/types/hospital';
 
-interface HospitalNetworkProps {
-  hospitals: Hospital[];
+interface Hospital {
+  id: string;
+  name: string;
+  location: string;
+  phone: string;
+  rating: number;
+  specialties: string[];
+  acceptsAyushman: boolean;
+  bedsAvailable: number;
+  totalBeds: number;
+  emergencyServices: boolean;
+  treatmentPackages: {
+    name: string;
+    description: string;
+    price: number;
+  }[];
 }
 
-export default function HospitalNetwork({ hospitals }: HospitalNetworkProps) {
-  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+const mockHospitals: Hospital[] = [
+  {
+    id: '1',
+    name: 'Apollo Hospital',
+    location: 'Jubilee Hills, Hyderabad',
+    phone: '+91-40-12345678',
+    rating: 4.5,
+    specialties: ['Cardiology', 'Neurology', 'Orthopedics'],
+    acceptsAyushman: true,
+    bedsAvailable: 45,
+    totalBeds: 200,
+    emergencyServices: true,
+    treatmentPackages: [
+      {
+        name: 'Cardiac Health Package',
+        description: 'Complete heart health assessment',
+        price: 5000
+      },
+      {
+        name: 'Executive Health Check',
+        description: 'Comprehensive health screening',
+        price: 7500
+      }
+    ]
+  },
+  {
+    id: '2',
+    name: 'KIMS Hospital',
+    location: 'Secunderabad, Hyderabad',
+    phone: '+91-40-87654321',
+    rating: 4.2,
+    specialties: ['Oncology', 'Pediatrics', 'Gynecology'],
+    acceptsAyushman: true,
+    bedsAvailable: 30,
+    totalBeds: 150,
+    emergencyServices: true,
+    treatmentPackages: [
+      {
+        name: 'Cancer Screening',
+        description: 'Early detection cancer screening',
+        price: 8000
+      }
+    ]
+  }
+];
 
-  const filteredHospitals = hospitals.filter(hospital => 
-    hospital.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    hospital.departments.some(dept => dept.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    hospital.address.city.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+const HospitalNetwork = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
+  const [showAyushmanOnly, setShowAyushmanOnly] = useState(false);
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
+
+  const filteredHospitals = mockHospitals.filter(hospital => {
+    const matchesSearch = hospital.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      hospital.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSpecialty = selectedSpecialty === 'all' || hospital.specialties.includes(selectedSpecialty);
+    const matchesAyushman = !showAyushmanOnly || hospital.acceptsAyushman;
+    return matchesSearch && matchesSpecialty && matchesAyushman;
+  });
+
+  const renderStars = (rating: number) => {
+    return Array(5).fill(0).map((_, i) => (
+      <Star
+        key={i}
+        className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+      />
+    ));
+  };
 
   return (
     <div className="space-y-6">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          type="text"
-          placeholder="Search hospitals by name, department or city..."
-          className="pl-10"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
-
-      {/* Network Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 flex items-center gap-3">
-          <Building2 className="h-8 w-8 text-blue-500" />
-          <div>
-            <p className="text-sm text-gray-600">Total Hospitals</p>
-            <p className="text-2xl font-semibold">{hospitals.length}</p>
+      {/* Search and Filters */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Input
+                placeholder="Search hospitals..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select specialty" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Specialties</SelectItem>
+                  <SelectItem value="Cardiology">Cardiology</SelectItem>
+                  <SelectItem value="Neurology">Neurology</SelectItem>
+                  <SelectItem value="Orthopedics">Orthopedics</SelectItem>
+                  <SelectItem value="Oncology">Oncology</SelectItem>
+                  <SelectItem value="Pediatrics">Pediatrics</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="ayushmanFilter"
+                checked={showAyushmanOnly}
+                onChange={(e) => setShowAyushmanOnly(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <label htmlFor="ayushmanFilter">Show Ayushman Card Accepted Only</label>
+            </div>
           </div>
-        </Card>
-        
-        <Card className="p-4 flex items-center gap-3">
-          <CreditCard className="h-8 w-8 text-green-500" />
-          <div>
-            <p className="text-sm text-gray-600">Ayushman Card Accepted</p>
-            <p className="text-2xl font-semibold">
-              {hospitals.filter(h => h.acceptsAyushman).length}
-            </p>
-          </div>
-        </Card>
-        
-        <Card className="p-4 flex items-center gap-3">
-          <Ambulance className="h-8 w-8 text-red-500" />
-          <div>
-            <p className="text-sm text-gray-600">Emergency Services</p>
-            <p className="text-2xl font-semibold">
-              {hospitals.filter(h => h.emergencyServices.available24x7).length}
-            </p>
-          </div>
-        </Card>
-        
-        <Card className="p-4 flex items-center gap-3">
-          <Package className="h-8 w-8 text-purple-500" />
-          <div>
-            <p className="text-sm text-gray-600">Departments</p>
-            <p className="text-2xl font-semibold">
-              {hospitals.reduce((acc, h) => acc + h.departments.length, 0)}
-            </p>
-          </div>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Hospital List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredHospitals.map((hospital) => (
-          <Dialog key={hospital.id}>
-            <DialogTrigger asChild>
-              <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                {/* Hospital Image */}
-                <div className="h-48 relative">
-                  <img
-                    src={hospital.imageUrl}
-                    alt={hospital.name}
-                    className="w-full h-full object-cover"
-                  />
-                  {hospital.acceptsAyushman && (
-                    <Badge className="absolute top-4 right-4 bg-green-500">
-                      Ayushman Card
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {filteredHospitals.map(hospital => (
+          <Card key={hospital.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>{hospital.name}</CardTitle>
+                  <div className="flex items-center text-sm text-muted-foreground mt-1">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    {hospital.location}
+                  </div>
+                </div>
+                {hospital.acceptsAyushman && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    Ayushman Card Accepted
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Rating and Contact */}
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-1">
+                    {renderStars(hospital.rating)}
+                    <span className="text-sm text-muted-foreground ml-2">
+                      {hospital.rating} / 5
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Phone className="h-4 w-4 mr-1" />
+                    {hospital.phone}
+                  </div>
+                </div>
+
+                {/* Specialties */}
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Specialties</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {hospital.specialties.map(specialty => (
+                      <Badge key={specialty} variant="outline">
+                        {specialty}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bed Availability */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Bed className="h-4 w-4 mr-2" />
+                    <span className="text-sm">
+                      {hospital.bedsAvailable} of {hospital.totalBeds} beds available
+                    </span>
+                  </div>
+                  {hospital.emergencyServices && (
+                    <Badge variant="destructive" className="bg-red-100 text-red-800">
+                      <AlertTriangle className="h-4 w-4 mr-1" />
+                      24/7 Emergency
                     </Badge>
                   )}
                 </div>
 
-                {/* Hospital Info */}
-                <div className="p-4 space-y-4">
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-semibold">{hospital.name}</h3>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="text-sm font-medium">{hospital.rating}</span>
-                        <span className="text-sm text-gray-500">({hospital.reviewCount})</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-500">{hospital.type}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <MapPin className="h-4 w-4" />
-                      <span>{hospital.address.street}, {hospital.address.city}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone className="h-4 w-4" />
-                      <span>{hospital.contact.phone}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {hospital.departments.slice(0, 3).map((dept, i) => (
-                      <Badge key={i} variant="secondary">{dept}</Badge>
-                    ))}
-                    {hospital.departments.length > 3 && (
-                      <Badge variant="secondary">+{hospital.departments.length - 3} more</Badge>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            </DialogTrigger>
-
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>{hospital.name}</DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-6">
-                {/* Basic Info */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Contact Information</h4>
-                    <div className="space-y-2 text-sm">
-                      <p>Phone: {hospital.contact.phone}</p>
-                      <p>Email: {hospital.contact.email}</p>
-                      <p>Website: {hospital.contact.website}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Address</h4>
-                    <p className="text-sm">
-                      {hospital.address.street}, {hospital.address.landmark}<br />
-                      {hospital.address.city}, {hospital.address.state} - {hospital.address.pincode}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Facilities & Services */}
-                <div>
-                  <h4 className="font-medium mb-2">Facilities</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {hospital.facilities.map((facility, i) => (
-                      <Badge key={i} variant="secondary">{facility}</Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Departments */}
-                <div>
-                  <h4 className="font-medium mb-2">Departments</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {hospital.departments.map((dept, i) => (
-                      <div key={i} className="text-sm">{dept}</div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Emergency Services */}
-                <div>
-                  <h4 className="font-medium mb-2">Emergency Services</h4>
-                  <div className="space-y-2 text-sm">
-                    <p>24x7 Available: {hospital.emergencyServices.available24x7 ? 'Yes' : 'No'}</p>
-                    <p>Ambulance: {hospital.emergencyServices.ambulanceNumber}</p>
-                    <p>Trauma Center: {hospital.emergencyServices.traumaCenter ? 'Yes' : 'No'}</p>
-                  </div>
+                {/* Actions */}
+                <div className="flex justify-between items-center pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedHospital(hospital)}
+                  >
+                    View Packages
+                  </Button>
+                  <Button>
+                    Book Appointment
+                  </Button>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
+            </CardContent>
+          </Card>
         ))}
       </div>
+
+      {/* Treatment Packages Dialog */}
+      <Dialog open={!!selectedHospital} onOpenChange={() => setSelectedHospital(null)}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Treatment Packages - {selectedHospital?.name}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px] mt-4">
+            <div className="space-y-4">
+              {selectedHospital?.treatmentPackages.map((pkg, index) => (
+                <Card key={index}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">{pkg.name}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {pkg.description}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">₹{pkg.price}</p>
+                        <Button variant="outline" size="sm" className="mt-2">
+                          Book Package
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
+};
+
+export default HospitalNetwork;

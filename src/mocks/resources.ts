@@ -6,7 +6,7 @@ export const mockVideos: Video[] = [
     title: 'Understanding Mental Health',
     description: 'A comprehensive guide to mental health awareness and self-care practices.',
     url: 'https://example.com/video1',
-    thumbnail: 'https://source.unsplash.com/random/800x600?mental+health',
+    thumbnail: '/images/resources/video-library.svg',
     duration: 1800, // 30 minutes
     language: 'English',
     category: 'Mental Health',
@@ -21,7 +21,7 @@ export const mockVideos: Video[] = [
     title: 'Yoga for Beginners',
     description: 'Start your yoga journey with these basic poses and breathing techniques.',
     url: 'https://example.com/video2',
-    thumbnail: 'https://source.unsplash.com/random/800x600?yoga',
+    thumbnail: '/images/resources/video-library.svg',
     duration: 1200, // 20 minutes
     language: 'Hindi',
     category: 'Fitness',
@@ -72,7 +72,7 @@ export const mockPodcasts: Podcast[] = [
     host: 'Dr. James Wilson',
     episodeNumber: 45,
     series: 'Health & Wellness',
-    thumbnail: 'https://source.unsplash.com/random/800x800?health',
+    thumbnail: '/images/resources/podcasts.svg',
     downloadUrl: 'https://example.com/podcast1/download'
   },
   {
@@ -84,7 +84,7 @@ export const mockPodcasts: Podcast[] = [
     host: 'Dr. Anita Desai',
     episodeNumber: 23,
     series: 'Mental Health',
-    thumbnail: 'https://source.unsplash.com/random/800x800?meditation',
+    thumbnail: '/images/resources/podcasts.svg',
     downloadUrl: 'https://example.com/podcast2/download'
   }
 ];
@@ -96,7 +96,7 @@ export const mockTours: VirtualTour[] = [
     description: '3D exploration of major body systems.',
     type: '3D',
     contentUrl: 'https://example.com/tour1',
-    thumbnail: 'https://source.unsplash.com/random/800x600?anatomy',
+    thumbnail: '/images/resources/virtual-tours.svg',
     category: 'Anatomy',
     difficulty: 'intermediate'
   },
@@ -106,7 +106,7 @@ export const mockTours: VirtualTour[] = [
     description: 'Experience a guided tour of a modern hospital facility.',
     type: 'VR',
     contentUrl: 'https://example.com/tour2',
-    thumbnail: 'https://source.unsplash.com/random/800x600?hospital',
+    thumbnail: '/images/resources/virtual-tours.svg',
     category: 'Healthcare',
     difficulty: 'beginner'
   }
@@ -159,7 +159,7 @@ export const mockGroups: HealthGroup[] = [
     category: 'Fitness',
     members: 250,
     isPrivate: false,
-    thumbnail: 'https://source.unsplash.com/random/800x600?yoga+group',
+    thumbnail: '/images/resources/webinars.svg',
     activities: [
       {
         id: 'activity1',
@@ -177,7 +177,7 @@ export const mockGroups: HealthGroup[] = [
     category: 'Mental Health',
     members: 180,
     isPrivate: false,
-    thumbnail: 'https://source.unsplash.com/random/800x600?meditation+group',
+    thumbnail: '/images/resources/webinars.svg',
     activities: [
       {
         id: 'activity2',

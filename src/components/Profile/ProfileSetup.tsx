@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Phone, Heart, Plus } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useEmergencyContacts } from '../../hooks/useEmergencyContacts';
+import useEmergencyContacts from '../../hooks/useEmergencyContacts';
 
 interface EmergencyContact {
   name: string;

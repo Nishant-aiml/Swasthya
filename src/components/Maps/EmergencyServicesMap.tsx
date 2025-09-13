@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import React, { useEffect, useState, useRef } from 'react';
 import L from 'leaflet';
-import { Hospital, Navigation, Phone, Clock, MapPin, ChevronUp } from 'lucide-react';
-import { toast } from 'sonner';
-import axios from 'axios';
+import { HeartPulse } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
 import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet default icon issue
@@ -19,338 +17,177 @@ interface Location {
   lng: number;
 }
 
-interface Service {
+interface HealthcareFacility {
   id: string;
   name: string;
-  type: 'hospital' | 'pharmacy' | 'clinic';
-  lat: number;
-  lng: number;
   address: string;
-  phone?: string;
-  distance?: number;
-  duration?: string;
+  location: Location;
+  type: string;
+  phone: string;
 }
 
-const serviceTypeOptions = [
-  { value: 'all', label: 'All Services' },
-  { value: 'hospital', label: 'Hospitals' },
-  { value: 'pharmacy', label: 'Pharmacies' },
-  { value: 'clinic', label: 'Clinics' }
-];
+const EmergencyServicesMap: React.FC = () => {
+  const [userLocation, setUserLocation] = useState<Location>({ lat: 17.385044, lng: 78.486671 }); // Default to Hyderabad
+  const [facilities, setFacilities] = useState<HealthcareFacility[]>([]);
+  const [loading, setLoading] = useState(true);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<L.Map | null>(null);
 
-// Function to calculate distance between two points in km
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = deg2rad(lat2 - lat1);
-  const dLon = deg2rad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function deg2rad(deg: number): number {
-  return deg * (Math.PI / 180);
-}
-
-function estimateDuration(distance: number): string {
-  const averageSpeed = 30;
-  const hours = distance / averageSpeed;
-  const minutes = Math.round(hours * 60);
-  return minutes < 60 ? `${minutes} mins` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
-}
-
-function MapComponent({ location, services, selectedService, setSelectedService }: any) {
-  const map = useMap();
-
+  // Initialize map
   useEffect(() => {
-    if (location) {
-      map.setView([location.lat, location.lng], 13);
-    }
-  }, [location, map]);
+    if (!mapContainerRef.current || map) return;
 
+    const mapInstance = L.map(mapContainerRef.current).setView(
+      [userLocation.lat, userLocation.lng],
+      13
+    );
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: ' OpenStreetMap contributors'
+    }).addTo(mapInstance);
+
+    setMap(mapInstance);
+
+    // Cleanup on unmount
+    return () => {
+      mapInstance.remove();
+      setMap(null);
+    };
+  }, [userLocation]);
+
+  // Get user's location
   useEffect(() => {
-    map.eachLayer((layer: any) => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setUserLocation(newLocation);
+        if (map) {
+          map.setView([newLocation.lat, newLocation.lng], 13);
+        }
+        setLoading(false);
+      },
+      () => {
+        // Keep default Hyderabad location on error
+        setLoading(false);
+      }
+    );
+  }, []);
+
+  // Update markers when facilities change
+  useEffect(() => {
+    if (!map || !facilities.length) return;
+
+    // Clear existing markers
+    map.eachLayer((layer) => {
       if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
+        layer.remove();
       }
     });
 
-    services.forEach((service: Service) => {
-      const marker = L.marker([service.lat, service.lng])
-        .addTo(map)
-        .bindPopup(`<b>${service.name}</b><br>${service.address || ''}`);
-
-      marker.on('click', () => {
-        const distance = calculateDistance(location.lat, location.lng, service.lat, service.lng);
-        setSelectedService({
-          ...service,
-          distance: distance.toFixed(1),
-          duration: estimateDuration(distance)
-        });
-      });
+    // Add user location marker
+    const userIcon = L.divIcon({
+      className: 'bg-blue-500 rounded-full w-4 h-4 border-2 border-white',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
     });
 
-    if (location) {
-      L.marker([location.lat, location.lng], {
-        icon: L.divIcon({
-          className: 'bg-blue-500 rounded-full w-4 h-4 border-2 border-white',
-          iconSize: [16, 16]
-        })
-      })
-        .addTo(map)
-        .bindPopup('Your Location');
-    }
-  }, [services, location, map, setSelectedService]);
+    L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+      .bindPopup('Your Location')
+      .addTo(map);
 
-  useEffect(() => {
-    if (selectedService && location) {
-      map.eachLayer((layer: any) => {
-        if (layer instanceof L.Polyline) {
-          map.removeLayer(layer);
-        }
+    facilities.forEach(facility => {
+      const facilityIcon = L.divIcon({
+        className: 'bg-red-500 rounded-full w-4 h-4 border-2 border-white',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
 
-      const line = L.polyline(
-        [[location.lat, location.lng], [selectedService.lat, selectedService.lng]],
-        { color: '#4f46e5', weight: 4 }
-      ).addTo(map);
-
-      map.fitBounds(line.getBounds(), { padding: [50, 50] });
-    }
-  }, [selectedService, location, map]);
-
-  return null;
-}
-
-export default function EmergencyServicesMap() {
-  const [location, setLocation] = useState<Location | null>(null);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [serviceType, setServiceType] = useState<'all' | 'hospital' | 'pharmacy' | 'clinic'>('all');
-  const [services, setServices] = useState<Service[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showList, setShowList] = useState(true);
-
-  const handleLocationUpdate = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setLocation({ lat: latitude, lng: longitude });
-          fetchNearbyServices(latitude, longitude);
-        },
-        (error) => toast.error('Failed to get location: ' + error.message),
-        { enableHighAccuracy: true }
-      );
-    } else {
-      toast.error('Geolocation is not supported by your browser');
-    }
-  };
-
-  const fetchNearbyServices = async (lat: number, lng: number) => {
-    setIsLoading(true);
-    try {
-      const radius = 5000;
-      const query = `
-        [out:json][timeout:25];
-        (
-          node["amenity"="hospital"](around:${radius},${lat},${lng});
-          node["amenity"="clinic"](around:${radius},${lat},${lng});
-          node["amenity"="pharmacy"](around:${radius},${lat},${lng});
-        );
-        out body;
-        >;
-        out skel qt;
-      `;
-
-      const response = await axios.post('https://overpass-api.de/api/interpreter', query);
-      
-      const mappedServices: Service[] = response.data.elements.map((element: any) => ({
-        id: element.id.toString(),
-        name: element.tags.name || 'Unnamed Service',
-        type: element.tags.amenity as 'hospital' | 'pharmacy' | 'clinic',
-        lat: element.lat,
-        lng: element.lon,
-        address: element.tags['addr:street'] 
-          ? `${element.tags['addr:street']}${element.tags['addr:housenumber'] ? ' ' + element.tags['addr:housenumber'] : ''}`
-          : 'Address not available',
-        phone: element.tags.phone || element.tags['contact:phone']
-      }));
-
-      setServices(mappedServices);
-    } catch (error) {
-      toast.error('Failed to fetch nearby services');
-      console.error('Error fetching services:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    handleLocationUpdate();
-  }, []);
-
-  const filteredServices = services.filter(
-    service => serviceType === 'all' || service.type === serviceType
-  );
-
-  const handleServiceClick = (service: Service) => {
-    const distance = calculateDistance(location!.lat, location!.lng, service.lat, service.lng);
-    setSelectedService({
-      ...service,
-      distance: Number(distance.toFixed(1)),
-      duration: estimateDuration(distance)
-    });
-    // On mobile, hide the list when a service is selected
-    if (window.innerWidth < 768) {
-      setShowList(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-6 relative">
-        {/* Service List - Hidden by default on mobile */}
-        <div className={`${showList ? 'block' : 'hidden'} md:block w-full md:w-1/3 space-y-4`}>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="mb-4">
-              <select
-                value={serviceType}
-                onChange={(e) => setServiceType(e.target.value as any)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {serviceTypeOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-3 max-h-[calc(100vh-400px)] overflow-y-auto">
-              {isLoading ? (
-                <div className="text-center py-4">Loading nearby services...</div>
-              ) : filteredServices.length === 0 ? (
-                <div className="text-center py-4">No services found nearby</div>
-              ) : (
-                filteredServices.map((service) => (
-                  <div
-                    key={service.id}
-                    className={`p-3 rounded-lg border ${
-                      selectedService?.id === service.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
-                    } cursor-pointer`}
-                    onClick={() => handleServiceClick(service)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold">{service.name}</h3>
-                        <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                          <MapPin className="h-4 w-4" />
-                          {service.address}
-                        </div>
-                        {service.phone && (
-                          <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                            <Phone className="h-4 w-4" />
-                            <a href={`tel:${service.phone}`} className="hover:text-blue-600">
-                              {service.phone}
-                            </a>
-                          </div>
-                        )}
-                        {service.distance && service.duration && (
-                          <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                            <Clock className="h-4 w-4" />
-                            {service.distance}km • {service.duration}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleServiceClick(service);
-                        }}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <Navigation className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
+      L.marker([facility.location.lat, facility.location.lng], { icon: facilityIcon })
+        .bindPopup(`
+          <div class="p-2">
+            <h3 class="font-semibold text-lg">${facility.name}</h3>
+            <p class="text-sm text-gray-600">${facility.address}</p>
+            <p class="text-sm text-gray-600">${facility.phone}</p>
+            <div class="flex items-center gap-2 mt-2 text-sm text-blue-600">
+              <span>${facility.type}</span>
             </div>
           </div>
-        </div>
+        `)
+        .addTo(map);
+    });
+  }, [map, facilities, userLocation]);
 
-        {/* Map container - Full width on mobile */}
-        <div className="w-full md:w-2/3 h-[50vh] md:h-[600px] rounded-lg overflow-hidden shadow-lg border border-gray-200">
-          <MapContainer
-            center={[20.5937, 78.9629]}
-            zoom={5}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            {location && (
-              <MapComponent
-                location={location}
-                services={services}
-                selectedService={selectedService}
-                setSelectedService={setSelectedService}
-              />
-            )}
-          </MapContainer>
+  // Load nearby healthcare facilities
+  useEffect(() => {
+    // Mock data - replace with actual API call
+    const mockFacilities: HealthcareFacility[] = [
+      {
+        id: '1',
+        name: 'City Hospital',
+        address: '123 Main St, Hyderabad',
+        location: {
+          lat: userLocation.lat + 0.01,
+          lng: userLocation.lng + 0.01,
+        },
+        type: 'Hospital',
+        phone: '+91 1234567890',
+      },
+      {
+        id: '2',
+        name: 'Community Clinic',
+        address: '456 Park Ave, Hyderabad',
+        location: {
+          lat: userLocation.lat - 0.01,
+          lng: userLocation.lng - 0.01,
+        },
+        type: 'Clinic',
+        phone: '+91 9876543210',
+      },
+    ];
+
+    setFacilities(mockFacilities);
+  }, [userLocation]);
+
+  if (loading) {
+    return (
+      <div className="h-[600px] flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
+          <p className="text-gray-600">Loading map...</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Emergency information cards - Grid on desktop, Stack on mobile */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-          <h3 className="font-semibold text-red-600 mb-2">Emergency Numbers</h3>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <a href="tel:108" className="hover:text-blue-600">Ambulance: 108</a>
-            </li>
-            <li>
-              <a href="tel:100" className="hover:text-blue-600">Police: 100</a>
-            </li>
-            <li>
-              <a href="tel:101" className="hover:text-blue-600">Fire: 101</a>
-            </li>
-          </ul>
-        </div>
+  return (
+    <div className="relative h-[600px]">
+      <div ref={mapContainerRef} className="h-full w-full" />
 
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-          <h3 className="font-semibold text-blue-600 mb-2">Emergency Tips</h3>
-          <ul className="space-y-2 text-sm">
-            <li>Stay calm and assess the situation</li>
-            <li>Call emergency services immediately</li>
-            <li>Follow dispatcher instructions</li>
-          </ul>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-          <h3 className="font-semibold text-green-600 mb-2">What to Prepare</h3>
-          <ul className="space-y-2 text-sm">
-            <li>Current location details</li>
-            <li>Nature of emergency</li>
-            <li>Patient's condition</li>
-          </ul>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-          <h3 className="font-semibold text-purple-600 mb-2">While Waiting</h3>
-          <ul className="space-y-2 text-sm">
-            <li>Keep the patient comfortable</li>
-            <li>Gather medical information</li>
-            <li>Clear access for emergency services</li>
-          </ul>
-        </div>
+      {/* Facilities List */}
+      <div className="absolute top-4 right-4 z-[1000]">
+        <Card className="p-4 w-80 bg-white/90 backdrop-blur-sm">
+          <h2 className="font-semibold mb-4">Nearby Healthcare Facilities</h2>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {facilities.map((facility) => (
+              <Card key={facility.id} className="p-3 hover:bg-gray-50">
+                <div className="flex items-start gap-3">
+                  <HeartPulse className="w-5 h-5 text-blue-500 mt-1" />
+                  <div>
+                    <h3 className="font-medium">{facility.name}</h3>
+                    <p className="text-sm text-gray-500">{facility.address}</p>
+                    <p className="text-sm text-gray-500">{facility.phone}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </Card>
       </div>
     </div>
   );
-}
+};
+
+export default EmergencyServicesMap;

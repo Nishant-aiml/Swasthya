@@ -1,93 +1,114 @@
-import { create } from 'zustand';
-import { Doctor } from '../types';
+import { useState, useEffect } from 'react';
+import { Doctor, Location } from '@/types/doctor';
+import { doctors } from '@/data/doctor-data';
 
-interface DoctorsState {
-  doctors: Doctor[];
-  loading: boolean;
-  error: string | null;
-  filters: {
-    specialization: string;
-    availability: 'all' | 'today' | 'week';
-    consultationType: 'all' | 'in-person' | 'online';
-    language: string;
-  };
-  setFilters: (filters: Partial<DoctorsState['filters']>) => void;
-  fetchDoctors: () => Promise<void>;
+interface UseDoctorsProps {
+  searchTerm?: string;
+  location?: Location;
+  specialty?: string;
+  rating?: number;
+  sortBy?: string;
+  priceRange?: [number, number];
+  languages?: string[];
+  availability?: boolean;
+  acceptsAyushman?: boolean;
 }
 
-export const useDoctors = create<DoctorsState>((set) => ({
-  doctors: [],
-  loading: false,
-  error: null,
-  filters: {
-    specialization: 'all',
-    availability: 'all',
-    consultationType: 'all',
-    language: 'all',
-  },
+export function useDoctors({
+  searchTerm = '',
+  location,
+  specialty = '',
+  rating = 0,
+  sortBy = '',
+  priceRange,
+  languages = [],
+  availability = false,
+  acceptsAyushman = false
+}: UseDoctorsProps = {}) {
+  const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>(doctors);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  setFilters: (newFilters) => {
-    set((state) => ({
-      filters: { ...state.filters, ...newFilters },
-    }));
-  },
-
-  fetchDoctors: async () => {
-    set({ loading: true, error: null });
+  useEffect(() => {
     try {
-      // In a real app, this would be an API call
-      const mockDoctors: Doctor[] = [
-        {
-          id: '1',
-          name: 'Dr. Priya Sharma',
-          specialization: 'Cardiologist',
-          experience: 15,
-          rating: 4.8,
-          location: 'Apollo Hospital, Mumbai',
-          languages: ['en', 'hi', 'mr'],
-          availableSlots: [
-            '2024-03-20T10:00:00Z',
-            '2024-03-20T11:00:00Z',
-            '2024-03-21T14:00:00Z'
-          ],
-          consultationFee: 1000,
-          isAvailableOnline: true,
-          education: [
-            'MBBS - AIIMS Delhi',
-            'MD Cardiology - AIIMS Delhi',
-            'Fellowship in Interventional Cardiology - UK'
-          ],
-          image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200'
-        },
-        {
-          id: '2',
-          name: 'Dr. Rajesh Kumar',
-          specialization: 'General Physician',
-          experience: 10,
-          rating: 4.6,
-          location: 'Max Healthcare, Delhi',
-          languages: ['en', 'hi'],
-          availableSlots: [
-            '2024-03-20T09:00:00Z',
-            '2024-03-20T10:00:00Z',
-            '2024-03-20T15:00:00Z'
-          ],
-          consultationFee: 800,
-          isAvailableOnline: true,
-          education: [
-            'MBBS - Maulana Azad Medical College',
-            'MD Internal Medicine - PGIMER'
-          ],
-          image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200'
-        }
-      ];
+      setLoading(true);
+      let filtered = [...doctors];
 
-      set({ doctors: mockDoctors, loading: false });
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to fetch doctors',
-        loading: false
-      });
+      // Filter by search term
+      if (searchTerm) {
+        filtered = filtered.filter(doctor => 
+          doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      // Filter by location
+      if (location) {
+        filtered = filtered.filter(doctor => 
+          doctor.location.city === location.city && 
+          doctor.location.state === location.state
+        );
+      }
+
+      // Filter by specialty
+      if (specialty) {
+        filtered = filtered.filter(doctor => doctor.specialty.toLowerCase() === specialty.toLowerCase());
+      }
+
+      // Filter by rating
+      if (rating > 0) {
+        filtered = filtered.filter(doctor => doctor.rating >= rating);
+      }
+
+      // Filter by price range
+      if (priceRange) {
+        const [min, max] = priceRange;
+        filtered = filtered.filter(doctor => {
+          const fee = doctor.consultationFee || 0;
+          return fee >= min && fee <= max;
+        });
+      }
+
+      // Filter by languages
+      if (languages.length > 0) {
+        filtered = filtered.filter(doctor => 
+          doctor.languages?.some(lang => languages.includes(lang))
+        );
+      }
+
+      // Filter by Ayushman acceptance
+      if (acceptsAyushman) {
+        filtered = filtered.filter(doctor => doctor.acceptsAyushman);
+      }
+
+      // Sort doctors
+      if (sortBy) {
+        switch (sortBy) {
+          case 'rating':
+            filtered.sort((a, b) => b.rating - a.rating);
+            break;
+          case 'experience':
+            filtered.sort((a, b) => b.experience - a.experience);
+            break;
+          case 'price':
+            filtered.sort((a, b) => {
+              const aFee = a.consultationFee || 0;
+              const bFee = b.consultationFee || 0;
+              return aFee - bFee;
+            });
+            break;
+          default:
+            break;
+        }
+      }
+
+      setFilteredDoctors(filtered);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while filtering doctors');
+    } finally {
+      setLoading(false);
     }
-  },
-}));
+  }, [searchTerm, location, specialty, rating, sortBy, priceRange, languages, availability, acceptsAyushman]);
+
+  return { doctors: filteredDoctors, loading, error };
+}

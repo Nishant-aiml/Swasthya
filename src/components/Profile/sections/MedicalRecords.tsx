@@ -1,101 +1,198 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/Card';
-import { Button } from '../../ui/Button';
-import { Input } from '../../ui/Input';
-import { Label } from '../../ui/Label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/Select';
-import { Upload, Lock, Share2, History } from 'lucide-react';
+import { useState, createElement } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { toast } from '@/components/ui/ToastNotification';
+import { dummyMedicalRecords, MedicalRecord } from '@/data/profile-data';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/Table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/Dialog';
+import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
+import FileUpload from './FileUpload';
 
-export function MedicalRecords() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [category, setCategory] = useState('');
-  const [sharePermission, setSharePermission] = useState('private');
+export default function MedicalRecords() {
+  const [records, setRecords] = useState<MedicalRecord[]>(dummyMedicalRecords);
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+
+  const downloadDocument = (documentName: string) => {
+    const dummyContent = 'This is a simulated medical document content.';
+    const blob = new Blob([dummyContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = documentName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Download Started',
+      description: `Downloading ${documentName}`,
+      duration: 3000,
+    });
+  };
+
+  const handleViewDetails = (record: MedicalRecord) => {
+    setSelectedRecord(record);
+  };
+
+  const handleUploadComplete = (fileInfo: { name: string; size: number; type: string }) => {
+    const newRecord: MedicalRecord = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().split('T')[0],
+      type: 'Document Upload',
+      description: `Uploaded ${fileInfo.name}`,
+      doctor: 'Self Upload',
+      hospital: 'N/A',
+      documents: [fileInfo.name],
+      status: 'completed'
+    };
+
+    setRecords([newRecord, ...records]);
+    setShowUploadDialog(false);
+    
+    toast({
+      title: 'Upload Successful',
+      description: `${fileInfo.name} has been uploaded successfully`,
+      duration: 3000,
+    });
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        // Process the file content
+      };
+      reader.readAsText(file);
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Medical Records</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <Label>Digital Record Storage</Label>
-          <div className="border-2 border-dashed rounded-lg p-4 text-center">
-            <Input
-              type="file"
-              className="hidden"
-              id="file-upload"
-              onChange={handleFileUpload}
-            />
-            <Label htmlFor="file-upload" className="cursor-pointer">
-              <Upload className="w-8 h-8 mx-auto mb-2" />
-              <p>Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-500">
-                Supports PDF, JPG, PNG (up to 10MB)
-              </p>
-            </Label>
-          </div>
-          {selectedFile && (
-            <p className="text-sm text-green-600">
-              Selected: {selectedFile.name}
-            </p>
-          )}
-        </div>
+    <div className="space-y-6 p-6 bg-white rounded-lg shadow">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Medical Records</h2>
+        <Button onClick={() => setShowUploadDialog(true)}>Upload New Record</Button>
+      </div>
 
-        <div className="space-y-2">
-          <Label>Document Category</Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="lab-reports">Lab Reports</SelectItem>
-              <SelectItem value="prescriptions">Prescriptions</SelectItem>
-              <SelectItem value="imaging">Imaging Results</SelectItem>
-              <SelectItem value="vaccination">Vaccination Records</SelectItem>
-              <SelectItem value="discharge">Discharge Summaries</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Medical Record</DialogTitle>
+            <DialogDescription>
+              Upload your medical documents securely
+            </DialogDescription>
+          </DialogHeader>
+          <FileUpload onUploadComplete={handleUploadComplete} />
+        </DialogContent>
+      </Dialog>
 
-        <div className="space-y-2">
-          <Label>Sharing Permissions</Label>
-          <Select value={sharePermission} onValueChange={setSharePermission}>
-            <SelectTrigger>
-              <SelectValue placeholder="Set permissions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="private">Private</SelectItem>
-              <SelectItem value="doctors">Doctors Only</SelectItem>
-              <SelectItem value="family">Family Members</SelectItem>
-              <SelectItem value="emergency">Emergency Access</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" className="flex items-center">
-            <Lock className="w-4 h-4 mr-2" />
-            Blockchain Security
-          </Button>
-          <Button variant="outline" className="flex items-center">
-            <Share2 className="w-4 h-4 mr-2" />
-            Share Records
-          </Button>
-          <Button variant="outline" className="flex items-center">
-            <History className="w-4 h-4 mr-2" />
-            Version History
-          </Button>
-        </div>
-
-        <Button className="w-full">Upload Record</Button>
-      </CardContent>
-    </Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Doctor</TableHead>
+            <TableHead>Hospital</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {records.map((record) => (
+            <TableRow key={record.id}>
+              <TableCell>{record.date}</TableCell>
+              <TableCell>{record.type}</TableCell>
+              <TableCell>{record.doctor}</TableCell>
+              <TableCell>{record.hospital}</TableCell>
+              <TableCell>
+                <span className={`px-2 py-1 rounded-full text-sm ${
+                  record.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  record.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {record.status}
+                </span>
+              </TableCell>
+              <TableCell>
+                <div className="space-x-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(record)}
+                      >
+                        View Details
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Medical Record Details</DialogTitle>
+                        <DialogDescription>
+                          Detailed information about the medical record
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Type</Label>
+                          <Input value={record.type} readOnly />
+                        </div>
+                        <div>
+                          <Label>Description</Label>
+                          <Input value={record.description} readOnly />
+                        </div>
+                        <div>
+                          <Label>Doctor</Label>
+                          <Input value={record.doctor} readOnly />
+                        </div>
+                        <div>
+                          <Label>Hospital</Label>
+                          <Input value={record.hospital} readOnly />
+                        </div>
+                        <div>
+                          <Label>Documents</Label>
+                          <div className="space-y-2">
+                            {record.documents.map((doc, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 border rounded">
+                                <span>{doc}</span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => downloadDocument(doc)}
+                                >
+                                  Download
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

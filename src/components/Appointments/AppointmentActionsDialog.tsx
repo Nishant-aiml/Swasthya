@@ -103,14 +103,14 @@ export default function AppointmentActionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[95vw] max-w-[450px] max-h-[85vh] overflow-y-auto bg-white rounded-xl shadow-xl border border-purple-100 p-0">
+      <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[95vw] max-w-[450px] max-h-[85vh] overflow-y-auto bg-white rounded-xl shadow-xl border border-purple-100 p-0" aria-describedby="appointment-actions-description">
         <DialogHeader className="sticky top-0 z-10 bg-white border-b border-purple-100">
           <div className="px-6 pt-6 pb-4 bg-gradient-to-r from-purple-50 to-blue-50">
             <DialogTitle className="text-xl font-semibold text-purple-900 flex items-center gap-2">
               <span className="text-purple-600">✨</span>
               Edit Appointment
             </DialogTitle>
-            <DialogDescription className="text-gray-600 mt-1">
+            <DialogDescription id="appointment-actions-description" className="text-gray-600 mt-1">
               Update your appointment details
             </DialogDescription>
             <button

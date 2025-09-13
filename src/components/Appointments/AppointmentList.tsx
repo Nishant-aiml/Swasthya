@@ -1,218 +1,141 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
-import { ScrollArea } from "@/components/ui/ScrollArea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/Dialog";
-import { Textarea } from "@/components/ui/Textarea";
-import { Star, Video, Phone, User, Clock, MapPin, AlertTriangle } from 'lucide-react';
-import type { Appointment } from '@/types/doctor';
-import { mockAppointments } from '@/data/mockData';
+import { FC, useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Clock, Video, User, Calendar, MapPin } from 'lucide-react';
+import type { Appointment } from '@/types/appointment';
+import { format } from 'date-fns';
 
 interface AppointmentListProps {
-  appointments?: Appointment[];
+  appointments: Appointment[];
   onCancelAppointment?: (id: string) => void;
-  onRescheduleAppointment?: (id: string, date: string, time: string) => void;
-  onSubmitFeedback?: (id: string, feedback: any) => void;
+  onRescheduleAppointment?: (id: string) => void;
+  onAppointmentSelect: (appointment: Appointment) => void;
 }
 
-export default function AppointmentList({
-  appointments = mockAppointments,
+const AppointmentList: FC<AppointmentListProps> = ({
+  appointments,
   onCancelAppointment,
   onRescheduleAppointment,
-  onSubmitFeedback
-}: AppointmentListProps) {
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [feedbackRating, setFeedbackRating] = useState(0);
-  const [feedbackComment, setFeedbackComment] = useState('');
-  const [feedbackMetrics, setFeedbackMetrics] = useState({
-    punctuality: 0,
-    communication: 0,
-    effectiveness: 0
-  });
-  const [activeTab, setActiveTab] = useState('upcoming');
+  onAppointmentSelect
+}) => {
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
 
-  const upcomingAppointments = appointments.filter(
-    apt => apt.status === 'confirmed'
-  );
-
-  const pastAppointments = appointments.filter(
-    apt => apt.status === 'completed' || apt.status === 'cancelled'
-  );
-
-  const handleSubmitFeedback = () => {
-    if (!selectedAppointment) return;
-    onSubmitFeedback?.(selectedAppointment.id, {
-      rating: feedbackRating,
-      comment: feedbackComment,
-      metrics: feedbackMetrics,
-      submitted: new Date().toISOString()
-    });
-    setSelectedAppointment(null);
-    setFeedbackRating(0);
-    setFeedbackComment('');
-    setFeedbackMetrics({
-      punctuality: 0,
-      communication: 0,
-      effectiveness: 0
-    });
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-100 text-green-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      case 'scheduled':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const renderAppointmentCard = (appointment: Appointment) => (
-    <Card key={appointment.id} className="mb-4">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Badge
-                variant={
-                  appointment.status === 'confirmed'
-                    ? 'default'
-                    : appointment.status === 'completed'
-                    ? 'success'
-                    : 'destructive'
-                }
-              >
-                {appointment.status}
-              </Badge>
-            </div>
-            <h4 className="font-medium">{appointment.patientName}</h4>
-            <div className="mt-2 space-y-1 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>{appointment.date} at {appointment.time}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                <span>{appointment.patientPhone}</span>
-              </div>
-              {appointment.ayushmanCard && (
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-green-100 text-green-800">
-                    Ayushman Card: {appointment.ayushmanCard}
-                  </Badge>
-                </div>
-              )}
-              {appointment.specialInstructions && (
-                <div className="mt-2">
-                  <p className="text-sm font-medium">Special Instructions:</p>
-                  <p className="text-sm text-gray-600">{appointment.specialInstructions}</p>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            {appointment.status === 'confirmed' && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onRescheduleAppointment?.(appointment.id, appointment.date, appointment.time)}
-                >
-                  Reschedule
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => onCancelAppointment?.(appointment.id)}
-                >
-                  Cancel
-                </Button>
-              </>
-            )}
-            {appointment.status === 'completed' && !appointment.feedback && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedAppointment(appointment)}
-                  >
-                    Give Feedback
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Rate your experience</DialogTitle>
-                    <DialogDescription>
-                      Your feedback helps us improve our service
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div>
-                      <label className="text-sm font-medium">Overall Rating</label>
-                      <div className="flex gap-1 mt-1">
-                        {[1, 2, 3, 4, 5].map((rating) => (
-                          <Star
-                            key={rating}
-                            className={`h-6 w-6 cursor-pointer ${
-                              rating <= feedbackRating
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
-                            }`}
-                            onClick={() => setFeedbackRating(rating)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Comment</label>
-                      <Textarea
-                        value={feedbackComment}
-                        onChange={(e) => setFeedbackComment(e.target.value)}
-                        placeholder="Share your experience..."
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleSubmitFeedback}>Submit Feedback</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setSelectedAppointmentId(appointment.id);
+    onAppointmentSelect(appointment);
+  };
+
+  if (appointments.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">No appointments found</p>
+      </div>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>My Appointments</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="upcoming">
-              Upcoming ({upcomingAppointments.length})
-            </TabsTrigger>
-            <TabsTrigger value="past">
-              Past ({pastAppointments.length})
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="upcoming" className="mt-4">
-            <ScrollArea className="h-[400px]">
-              {upcomingAppointments.map(renderAppointmentCard)}
-            </ScrollArea>
-          </TabsContent>
-          <TabsContent value="past" className="mt-4">
-            <ScrollArea className="h-[400px]">
-              {pastAppointments.map(renderAppointmentCard)}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {appointments.map((appointment) => (
+        <Card
+          key={appointment.id}
+          className={`p-6 cursor-pointer transition-colors ${
+            selectedAppointmentId === appointment.id ? 'ring-2 ring-primary' : ''
+          }`}
+          onClick={() => handleAppointmentClick(appointment)}
+        >
+          <div className="space-y-4">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold">{appointment.patientName}</h3>
+                <p className="text-sm text-gray-500">{appointment.patientEmail}</p>
+              </div>
+              <Badge className={getStatusBadgeClass(appointment.status)}>
+                {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Calendar className="h-4 w-4" />
+                <span>{format(new Date(appointment.date), 'MMM d, yyyy')}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Clock className="h-4 w-4" />
+                <span>{appointment.time}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                {appointment.consultationType === 'online' ? (
+                  <Video className="h-4 w-4" />
+                ) : (
+                  <User className="h-4 w-4" />
+                )}
+                <span>
+                  {appointment.consultationType === 'online'
+                    ? 'Video Consultation'
+                    : 'In-person Visit'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <MapPin className="h-4 w-4" />
+                <span>₹{appointment.consultationFee}</span>
+              </div>
+            </div>
+
+            {selectedAppointmentId === appointment.id && appointment.status !== 'cancelled' && (
+              <div className="flex gap-3 mt-4">
+                {appointment.status === 'confirmed' && onRescheduleAppointment && (
+                  <Button
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRescheduleAppointment(appointment.id);
+                    }}
+                  >
+                    Reschedule
+                  </Button>
+                )}
+                {appointment.status === 'confirmed' && onCancelAppointment && (
+                  <Button
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCancelAppointment(appointment.id);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {appointment.symptoms && (
+              <div className="mt-2">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Symptoms:</span> {appointment.symptoms}
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      ))}
+    </div>
   );
-}
+};
+
+export default AppointmentList;

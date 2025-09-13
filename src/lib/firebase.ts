@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getAnalytics } from 'firebase/analytics';
 
 // Your web app's Firebase configuration
@@ -9,29 +9,33 @@ const firebaseConfig = {
   projectId: "swasthya-42ae5",
   storageBucket: "swasthya-42ae5.appspot.com",
   messagingSenderId: "271708715566",
-  appId: "1:271708715566:web:3374cebe5c0ea53e1cbdbf",
-  measurementId: "G-0BK6R960CJ"
+  appId: "1:271708715566:web:b1e23f2dd289915c1cbdbf",
+  measurementId: "G-P3RZMGVLY6"
 };
 
 // Initialize Firebase
 let app;
+let analytics;
+
 try {
   app = initializeApp(firebaseConfig);
+  // Only initialize analytics in the browser environment
+  if (typeof window !== 'undefined') {
+    analytics = getAnalytics(app);
+  }
 } catch (error: any) {
   if (error.code !== 'app/duplicate-app') {
     console.error('Firebase initialization error:', error);
   }
-  app = initializeApp(firebaseConfig, 'swasthya-app');
 }
 
-// Initialize Firebase services
-export const auth = getAuth(app);
+// Initialize Firebase Authentication
+const auth = getAuth(app);
 
-// Initialize Analytics only in browser environment
-let analytics = null;
-if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
-}
-export { analytics };
+// Set persistence to LOCAL to keep the user logged in
+setPersistence(auth, browserLocalPersistence)
+  .catch((error) => {
+    console.error('Error setting auth persistence:', error);
+  });
 
-export default app;
+export { auth, analytics };

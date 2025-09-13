@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/Card';
 import { Input } from '../../ui/Input';
 import { Label } from '../../ui/Label';
 import { Button } from '../../ui/Button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/Select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { FileText, Upload, Clock, Share2, Lock } from 'lucide-react';
 
 interface Document {
@@ -16,7 +16,8 @@ interface Document {
   sharedWith: string[];
 }
 
-export function MedicalRecordsManagement() {
+export default function MedicalRecordsManagement() {
+  const [selectedRecord, setSelectedRecord] = useState('all');
   const [documents] = useState<Document[]>([
     {
       id: '1',
@@ -44,6 +45,25 @@ export function MedicalRecordsManagement() {
         <CardTitle>Medical Records Management</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold">Medical Records</h2>
+          <Select
+            value={selectedRecord}
+            onValueChange={setSelectedRecord}
+            defaultValue="all"
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Filter records" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Records</SelectItem>
+              <SelectItem value="prescriptions">Prescriptions</SelectItem>
+              <SelectItem value="reports">Lab Reports</SelectItem>
+              <SelectItem value="imaging">Imaging</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Upload Section */}
         <div className="border-2 border-dashed rounded-lg p-4">
           <div className="text-center">
@@ -86,7 +106,11 @@ export function MedicalRecordsManagement() {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <Label>Recent Documents</Label>
-            <Select defaultValue="date">
+            <Select
+              value="date"
+              onValueChange={() => {}}
+              defaultValue="date"
+            >
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>

@@ -4,10 +4,10 @@ import { Mic, MicOff } from 'lucide-react';
 
 interface VoiceSearchProps {
   onResult: (transcript: string) => void;
-  onError: (error: string) => void;
+  onError?: (error: string) => void;
 }
 
-export default function VoiceSearch({ onResult, onError }: VoiceSearchProps) {
+export default function VoiceSearch({ onResult, onError = () => {} }: VoiceSearchProps) {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
 
@@ -48,7 +48,7 @@ export default function VoiceSearch({ onResult, onError }: VoiceSearchProps) {
         recognition.abort();
       }
     };
-  }, [onResult, onError]);
+  }, []);
 
   const toggleListening = () => {
     if (!recognition) return;

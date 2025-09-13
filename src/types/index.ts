@@ -1,19 +1,41 @@
-export interface Doctor {
-  id: string;
-  name: string;
-  specialization: string;
-  experience: number;
-  rating: number;
-  location: string;
-  languages: string[];
-  availableSlots: string[];
-  consultationFee: number;
-  isAvailableOnline: boolean;
-  education: string[];
-  image: string;
+// Base types
+export interface Location {
+  lat: number;
+  lng: number;
+  address: string;
 }
 
-export type { EmergencyService } from './emergency';
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+export interface Contact {
+  phone: string;
+  email: string;
+  website?: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export type { Doctor } from './doctor';
+export type { Hospital } from './hospital';
+export type { Appointment } from './appointment';
+export type { Review } from './review';
+
+export interface PaginatedResponse<T> extends ApiResponse<T> {
+  total: number;
+  page: number;
+  limit: number;
+}
 
 export interface Medicine {
   id: string;

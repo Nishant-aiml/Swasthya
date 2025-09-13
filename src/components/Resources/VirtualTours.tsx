@@ -1,121 +1,141 @@
-import React, { useState } from 'react';
-import { VirtualTour } from '@/types/Resources';
-import { Box, Headset, ScanFace, Gamepad2 } from 'lucide-react';
+import { useState } from 'react';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Eye, Video, Play, Pause, RotateCw } from 'lucide-react';
 
-interface VirtualToursProps {
-  tours: VirtualTour[];
-  onTourSelect: (tour: VirtualTour) => void;
+interface Tour {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  videoUrl: string;
+  duration: string;
+  views: number;
 }
 
-export function VirtualTours({ tours, onTourSelect }: VirtualToursProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+export default function VirtualTours() {
+  const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const filteredTours = tours.filter(tour => {
-    const categoryMatch = selectedCategory === 'all' || tour.category === selectedCategory;
-    const difficultyMatch = selectedDifficulty === 'all' || tour.difficulty === selectedDifficulty;
-    return categoryMatch && difficultyMatch;
-  });
-
-  const categories = ['all', ...new Set(tours.map(t => t.category))];
-  const difficulties = ['all', 'beginner', 'intermediate', 'advanced'];
-
-  const getTourIcon = (type: 'AR' | 'VR' | '3D') => {
-    switch (type) {
-      case 'AR':
-        return <ScanFace className="w-6 h-6" />;
-      case 'VR':
-        return <Headset className="w-6 h-6" />;
-      case '3D':
-        return <Box className="w-6 h-6" />;
-      default:
-        return <Gamepad2 className="w-6 h-6" />;
+  const tours: Tour[] = [
+    {
+      id: '1',
+      title: 'Emergency Department Tour',
+      description: 'Get familiar with our state-of-the-art emergency facilities',
+      thumbnail: '/images/tours/emergency.jpg',
+      videoUrl: '/videos/emergency-tour.mp4',
+      duration: '5:30',
+      views: 1234
+    },
+    {
+      id: '2',
+      title: 'Maternity Ward Tour',
+      description: 'Explore our comfortable maternity facilities',
+      thumbnail: '/images/tours/maternity.jpg',
+      videoUrl: '/videos/maternity-tour.mp4',
+      duration: '4:45',
+      views: 987
+    },
+    {
+      id: '3',
+      title: 'Pediatric Center Tour',
+      description: 'See our child-friendly pediatric facilities',
+      thumbnail: '/images/tours/pediatric.jpg',
+      videoUrl: '/videos/pediatric-tour.mp4',
+      duration: '6:15',
+      views: 756
     }
-  };
+  ];
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner':
-        return 'text-green-600 dark:text-green-400';
-      case 'intermediate':
-        return 'text-yellow-600 dark:text-yellow-400';
-      case 'advanced':
-        return 'text-red-600 dark:text-red-400';
-      default:
-        return 'text-gray-600 dark:text-gray-400';
-    }
+  const handleTourSelect = (tour: Tour) => {
+    setSelectedTour(tour);
+    setIsPlaying(true);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-4 items-center">
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2"
-        >
-          {categories.map(cat => (
-            <option key={cat} value={cat}>
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={selectedDifficulty}
-          onChange={(e) => setSelectedDifficulty(e.target.value)}
-          className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2"
-        >
-          {difficulties.map(diff => (
-            <option key={diff} value={diff}>
-              {diff.charAt(0).toUpperCase() + diff.slice(1)}
-            </option>
-          ))}
-        </select>
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold">Virtual Hospital Tours</h2>
+        <p className="text-gray-600">
+          Take a virtual walk through our facilities
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTours.map((tour) => (
-          <div
-            key={tour.id}
-            className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer"
-            onClick={() => onTourSelect(tour)}
-          >
-            <div className="aspect-video relative">
-              <img
-                src={tour.thumbnail}
-                alt={tour.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-full p-2 shadow-md">
-                {getTourIcon(tour.type)}
-              </div>
-            </div>
-
-            <div className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium bg-primary-50 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 px-2 py-1 rounded">
-                  {tour.type}
-                </span>
-                <span className={`text-sm font-medium ${getDifficultyColor(tour.difficulty)}`}>
-                  {tour.difficulty.charAt(0).toUpperCase() + tour.difficulty.slice(1)}
-                </span>
-              </div>
-
-              <h3 className="font-semibold text-lg">{tour.title}</h3>
-              
-              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                {tour.description}
-              </p>
-
-              <div className="pt-2">
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  Category: {tour.category}
-                </span>
+      {selectedTour ? (
+        <div className="space-y-4">
+          <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+            <video
+              src={selectedTour.videoUrl}
+              poster={selectedTour.thumbnail}
+              className="w-full h-full object-cover"
+              autoPlay={isPlaying}
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+              <div className="flex items-center justify-between text-white">
+                <div>
+                  <h3 className="font-medium">{selectedTour.title}</h3>
+                  <p className="text-sm opacity-80">{selectedTour.duration}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="text-white hover:text-white/80"
+                  >
+                    {isPlaying ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSelectedTour(null)}
+                    className="text-white hover:text-white/80"
+                  >
+                    <RotateCw className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+          <p className="text-gray-600">{selectedTour.description}</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {tours.map((tour) => (
+            <Card
+              key={tour.id}
+              className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleTourSelect(tour)}
+            >
+              <div className="relative aspect-video">
+                <img
+                  src={tour.thumbnail}
+                  alt={tour.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                  <Video className="h-12 w-12 text-white" />
+                </div>
+                <div className="absolute bottom-2 right-2 bg-black/70 text-white text-sm px-2 py-1 rounded">
+                  {tour.duration}
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-medium">{tour.title}</h3>
+                <p className="text-sm text-gray-600 mt-1">{tour.description}</p>
+                <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                  <Eye className="h-4 w-4" />
+                  <span>{tour.views.toLocaleString()} views</span>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

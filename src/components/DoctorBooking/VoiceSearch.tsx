@@ -9,6 +9,7 @@ interface VoiceSearchProps {
 const VoiceSearch: React.FC<VoiceSearchProps> = ({ onResult, onError }) => {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
@@ -19,18 +20,18 @@ const VoiceSearch: React.FC<VoiceSearchProps> = ({ onResult, onError }) => {
       recognitionInstance.interimResults = false;
       recognitionInstance.lang = 'en-IN';
 
-      recognitionInstance.onresult = (event) => {
+      const handleResult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
         onResult(transcript);
         setIsListening(false);
       };
 
-      recognitionInstance.onerror = (event) => {
-        onError(`Error occurred in recognition: ${event.error}`);
-        setIsListening(false);
-      };
-
-      recognitionInstance.onend = () => {
+      recognitionInstance.onstart = () => setIsListening(true);
+      recognitionInstance.onend = () => setIsListening(false);
+      recognitionInstance.onresult = handleResult;
+      recognitionInstance.onerror = (event: Event) => {
+        const speechEvent = event as SpeechRecognitionErrorEvent;
+        onError(speechEvent.error);
         setIsListening(false);
       };
 

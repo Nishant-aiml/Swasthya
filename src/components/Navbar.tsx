@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Brain, Pill, AlertCircle, Calendar, User, Menu, X, BookOpen, Sparkles, Sun, Moon } from 'lucide-react';
+import { Brain, Pill, AlertCircle, Calendar, User, Menu, X, BookOpen, Sparkles, Sun, Moon, MapPin, Camera } from 'lucide-react';
 import { useColorMode } from '../hooks/useColorMode';
 import NotificationCenter from './Notifications/NotificationCenter';
 
@@ -67,6 +67,20 @@ export default function Navbar() {
                   >
                     <Brain className="h-4 w-4" />
                     Health AI
+                  </Link>
+                  <Link
+                    to="/face-detection"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-orange-700 hover:bg-orange-50 hover:text-orange-800 transition-colors"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Face Detection
+                  </Link>
+                  <Link
+                    to="/insurance-mapping"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-teal-700 hover:bg-teal-50 hover:text-teal-800 transition-colors"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Insurance Mapping
                   </Link>
                   <Link
                     to="/appointments"
@@ -188,6 +202,22 @@ export default function Navbar() {
                 >
                   <Brain className="h-4 w-4" />
                   Health AI
+                </Link>
+                <Link
+                  to="/face-detection"
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-orange-700 hover:bg-orange-50 hover:text-orange-800 transition-colors"
+                  onClick={toggleMenu}
+                >
+                  <Camera className="h-4 w-4" />
+                  Face Detection
+                </Link>
+                <Link
+                  to="/insurance-mapping"
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-teal-700 hover:bg-teal-50 hover:text-teal-800 transition-colors"
+                  onClick={toggleMenu}
+                >
+                  <MapPin className="h-4 w-4" />
+                  Insurance Mapping
                 </Link>
                 <Link
                   to="/appointments"

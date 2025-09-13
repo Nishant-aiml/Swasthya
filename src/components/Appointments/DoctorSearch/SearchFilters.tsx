@@ -12,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { specializations, languages } from '@/data/doctor-data';
+import { specializations } from '@/data/doctor-data';
+import { languages } from '@/data/constants';
 
 interface SearchFiltersProps {
   filters: SearchFiltersType;
@@ -34,7 +35,7 @@ export default function SearchFilters({
       <div>
         <label className="text-sm font-medium">Specialization</label>
         <Select
-          value={filters.specialization}
+          value={filters.specialization || ''}
           onValueChange={(value) => handleChange('specialization', value)}
         >
           <SelectTrigger>
@@ -101,7 +102,7 @@ export default function SearchFilters({
       <div>
         <label className="text-sm font-medium">Languages</label>
         <div className="flex flex-wrap gap-2 mt-2">
-          {languages.map((lang) => (
+          {languages.map((lang: string) => (
             <Badge
               key={lang}
               variant={filters.languages?.includes(lang) ? 'default' : 'outline'}
@@ -131,7 +132,7 @@ export default function SearchFilters({
       <div>
         <label className="text-sm font-medium">Consultation Type</label>
         <Select
-          value={filters.consultationType}
+          value={filters.consultationType || ''}
           onValueChange={(value) => handleChange('consultationType', value)}
         >
           <SelectTrigger>

@@ -1,49 +1,42 @@
-import { useState, useCallback } from 'react';
-import { mockDoctors, mockAppointments } from '../data/mockData';
-import type { Appointment } from '../types/doctor';
+import { useState } from 'react';
+import { Appointment } from '@/types/appointment';
 
-export function useAppointments() {
-  const [appointments, setAppointments] = useState(mockAppointments);
+export const useAppointments = (initialAppointments: Appointment[] = []) => {
+  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
 
-  const cancelAppointment = useCallback((id: string) => {
-    setAppointments(prev => 
-      prev.map(apt => 
-        apt.id === id ? { ...apt, status: 'cancelled' } : apt
+  const addAppointment = (appointment: Appointment) => {
+    setAppointments(prev => [...prev, appointment]);
+  };
+
+  const updateAppointment = (id: string, updates: Partial<Appointment>) => {
+    setAppointments(prev =>
+      prev.map(app => (app.id === id ? { ...app, ...updates } : app))
+    );
+  };
+
+  const cancelAppointment = (id: string, reason: string) => {
+    setAppointments(prev =>
+      prev.map(app =>
+        app.id === id
+          ? {
+              ...app,
+              status: 'cancelled' as const,
+              cancellationReason: reason
+            }
+          : app
       )
     );
-  }, []);
+  };
 
-  const rescheduleAppointment = useCallback((id: string, newDate: string, newTime: string) => {
-    setAppointments(prev => 
-      prev.map(apt => 
-        apt.id === id ? { ...apt, date: newDate, time: newTime } : apt
-      )
-    );
-  }, []);
-
-  const submitFeedback = useCallback((id: string, feedback: any) => {
-    setAppointments(prev => 
-      prev.map(apt => 
-        apt.id === id ? { ...apt, feedback } : apt
-      )
-    );
-  }, []);
-
-  const bookAppointment = useCallback((appointmentData: Omit<Appointment, 'id'>) => {
-    const newAppointment = {
-      id: `a${Date.now()}`,
-      ...appointmentData,
-      status: 'confirmed'
-    };
-    setAppointments(prev => [...prev, newAppointment]);
-    return newAppointment;
-  }, []);
+  const getAppointmentById = (id: string) => {
+    return appointments.find(app => app.id === id);
+  };
 
   return {
     appointments,
+    addAppointment,
+    updateAppointment,
     cancelAppointment,
-    rescheduleAppointment,
-    submitFeedback,
-    bookAppointment,
+    getAppointmentById
   };
-}
+};

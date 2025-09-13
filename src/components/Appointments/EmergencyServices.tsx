@@ -1,208 +1,125 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/Dialog";
-import { ScrollArea } from "@/components/ui/ScrollArea";
-import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/Badge";
-import { Phone, Ambulance, MapPin, Heart, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { MapPin, Phone, AlertTriangle, HeartPulse, Stethoscope, Car } from 'lucide-react';
 
-export default function EmergencyServices() {
-  return (
-    <Card className="bg-red-50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-red-600">
-          <AlertTriangle className="h-5 w-5" />
-          Emergency Services
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Emergency Contact */}
-        <div>
-          <Button
-            variant="destructive"
-            className="w-full gap-2 text-lg font-bold"
-            size="lg"
-          >
-            <Phone className="h-5 w-5" />
-            Call 102
-          </Button>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full gap-2">
-                <Ambulance className="h-4 w-4" />
-                Ambulance
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Book Ambulance</DialogTitle>
-                <DialogDescription>
-                  Enter your location details for immediate assistance
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Your Location</label>
-                  <div className="flex gap-2 mt-1">
-                    <Input placeholder="Enter your address" />
-                    <Button variant="outline" className="shrink-0">
-                      <MapPin className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Emergency Type</label>
-                  <div className="grid grid-cols-2 gap-2 mt-1">
-                    <Button variant="outline" className="justify-start gap-2">
-                      <Heart className="h-4 w-4 text-red-500" />
-                      Cardiac
-                    </Button>
-                    <Button variant="outline" className="justify-start gap-2">
-                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                      Accident
-                    </Button>
-                  </div>
-                </div>
-                <Button className="w-full">Request Ambulance</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full gap-2">
-                <Ambulance className="h-4 w-4" />
-                First Aid
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Emergency First Aid Guide</DialogTitle>
-                <DialogDescription>
-                  Quick reference for common emergencies
-                </DialogDescription>
-              </DialogHeader>
-              <ScrollArea className="h-[400px] pr-4">
-                <div className="space-y-4">
-                  {emergencyGuides.map((guide) => (
-                    <div key={guide.title} className="space-y-2">
-                      <h3 className="font-medium flex items-center gap-2">
-                        {guide.icon}
-                        {guide.title}
-                      </h3>
-                      <div className="pl-6 space-y-2">
-                        {guide.steps.map((step, index) => (
-                          <p key={index} className="text-sm">
-                            {index + 1}. {step}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Nearby Hospitals */}
-        <div>
-          <h3 className="text-sm font-medium mb-2">Nearest Emergency Rooms</h3>
-          <ScrollArea className="h-[200px]">
-            <div className="space-y-2">
-              {nearbyHospitals.map((hospital) => (
-                <Card key={hospital.id}>
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-medium">{hospital.name}</h4>
-                        <p className="text-sm text-gray-500 flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {hospital.distance} km away
-                        </p>
-                      </div>
-                      <Badge
-                        variant={hospital.bedsAvailable > 0 ? 'success' : 'destructive'}
-                      >
-                        {hospital.bedsAvailable} beds
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
-      </CardContent>
-    </Card>
-  );
+interface EmergencyContact {
+  name: string;
+  number: string;
+  address?: string;
+  type: 'hospital' | 'ambulance' | 'police' | 'fire';
 }
 
-const emergencyGuides = [
-  {
-    title: 'Cardiac Emergency',
-    icon: <Heart className="h-4 w-4 text-red-500" />,
-    steps: [
-      'Call emergency services immediately (102)',
-      'Make the person sit or lie down',
-      'Loosen any tight clothing',
-      'Check if the person is breathing',
-      'Be prepared to perform CPR if needed',
-    ],
-  },
-  {
-    title: 'Bleeding',
-    icon: <AlertTriangle className="h-4 w-4 text-yellow-500" />,
-    steps: [
-      'Apply direct pressure to the wound',
-      'Elevate the injured area if possible',
-      'Use a clean cloth or sterile bandage',
-      'Do not remove the cloth if it becomes soaked',
-      'Seek immediate medical attention',
-    ],
-  },
-  {
-    title: 'Burns',
-    icon: <AlertTriangle className="h-4 w-4 text-orange-500" />,
-    steps: [
-      'Cool the burn under running water',
-      'Do not apply ice directly',
-      'Cover with a clean, dry cloth',
-      'Do not apply creams or butter',
-      'Seek medical attention for serious burns',
-    ],
-  },
-];
+export default function EmergencyServices() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState<string>('all');
 
-const nearbyHospitals = [
-  {
-    id: '1',
-    name: 'City Emergency Hospital',
-    distance: 1.2,
-    bedsAvailable: 5,
-  },
-  {
-    id: '2',
-    name: 'General Hospital',
-    distance: 2.5,
-    bedsAvailable: 0,
-  },
-  {
-    id: '3',
-    name: 'Medical Center',
-    distance: 3.1,
-    bedsAvailable: 8,
-  },
-];
+  const emergencyContacts: EmergencyContact[] = [
+    {
+      name: 'City General Hospital',
+      number: '108',
+      address: '123 Healthcare Street, Medical District',
+      type: 'hospital'
+    },
+    {
+      name: 'Emergency Ambulance Service',
+      number: '102',
+      type: 'ambulance'
+    },
+    {
+      name: 'Police Emergency',
+      number: '100',
+      type: 'police'
+    },
+    {
+      name: 'Fire Emergency',
+      number: '101',
+      type: 'fire'
+    }
+  ];
+
+  const filteredContacts = emergencyContacts.filter(contact => {
+    const matchesSearch = contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         contact.number.includes(searchQuery);
+    const matchesType = selectedType === 'all' || contact.type === selectedType;
+    return matchesSearch && matchesType;
+  });
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'hospital':
+        return <HeartPulse className="h-5 w-5" />;
+      case 'ambulance':
+        return <Car className="h-5 w-5" />;
+      case 'police':
+        return <AlertTriangle className="h-5 w-5" />;
+      case 'fire':
+        return <AlertTriangle className="h-5 w-5" />;
+      default:
+        return <Stethoscope className="h-5 w-5" />;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold">Emergency Services</h2>
+        <p className="text-gray-600">Quick access to emergency contacts and services</p>
+      </div>
+
+      <div className="space-y-4">
+        <Input
+          type="text"
+          placeholder="Search emergency services..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-md"
+        />
+
+        <Tabs value={selectedType} onValueChange={setSelectedType}>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="hospital">Hospitals</TabsTrigger>
+            <TabsTrigger value="ambulance">Ambulance</TabsTrigger>
+            <TabsTrigger value="police">Police</TabsTrigger>
+            <TabsTrigger value="fire">Fire</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredContacts.map((contact, index) => (
+          <Card key={index} className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                {getIcon(contact.type)}
+                <div>
+                  <h3 className="font-semibold">{contact.name}</h3>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone className="h-4 w-4" />
+                    <span>{contact.number}</span>
+                  </div>
+                  {contact.address && (
+                    <div className="flex items-center gap-2 text-gray-600 mt-1">
+                      <MapPin className="h-4 w-4" />
+                      <span>{contact.address}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.href = `tel:${contact.number}`}
+              >
+                Call
+              </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}

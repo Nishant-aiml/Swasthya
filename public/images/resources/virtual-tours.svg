@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f0f9ff"/>
+  <g transform="translate(250,150)">
+    <rect x="0" y="0" width="300" height="200" rx="15" fill="#3b82f6"/>
+    <path d="M100,100 h100 v60 h-100 v-60" fill="none" stroke="white" stroke-width="4"/>
+    <path d="M120,130 l60,-20 v40 l-60,-20" fill="white"/>
+    <circle cx="150" cy="100" r="40" fill="none" stroke="white" stroke-width="2" stroke-dasharray="4 4">
+      <animateTransform attributeName="transform" type="rotate" from="0 150 100" to="360 150 100" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <text x="150" y="240" text-anchor="middle" fill="#1e40af" font-family="Arial" font-size="24">Virtual Tours</text>
+  </g>
+</svg>

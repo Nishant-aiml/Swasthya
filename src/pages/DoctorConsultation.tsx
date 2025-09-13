@@ -1,16 +1,47 @@
-import React from 'react';
-import DoctorList from '../components/DoctorBooking/DoctorList';
+import { useState } from 'react';
+import { DoctorList } from '@/components/DoctorBooking/DoctorList';
+import { DoctorProfile } from '@/components/DoctorBooking/DoctorProfile';
+import { Doctor } from '@/types/doctor';
+import { mockDoctors } from '@/data/mockData';
 
-export default function DoctorConsultation() {
+export default function DoctorConsultationPage() {
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+
+  const handleSelectDoctor = (doctor: Doctor) => {
+    setSelectedDoctor(doctor);
+  };
+
+  const handleBookAppointment = (doctor: Doctor, date: Date) => {
+    console.log('Booking appointment with:', doctor, 'for date:', date);
+  };
+
+  const handleViewDetails = (doctor: Doctor) => {
+    setSelectedDoctor(doctor);
+  };
+
+  const handleToggleFavorite = (doctor: Doctor) => {
+    // Implement favorite toggling logic
+    console.log('Toggle favorite for:', doctor);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Find a Doctor</h1>
-        <p className="text-gray-600">
-          Book in-person or online consultations with verified doctors
-        </p>
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col space-y-6">
+        {selectedDoctor ? (
+          <DoctorProfile
+            doctor={selectedDoctor}
+            onClose={() => setSelectedDoctor(null)}
+            onBookAppointment={(date) => handleBookAppointment(selectedDoctor, date)}
+          />
+        ) : (
+          <DoctorList
+            doctors={mockDoctors}
+            onBookAppointment={(doctor, date) => handleBookAppointment(doctor, date)}
+            onViewDetails={handleViewDetails}
+            onToggleFavorite={handleToggleFavorite}
+          />
+        )}
       </div>
-      <DoctorList />
     </div>
   );
 }

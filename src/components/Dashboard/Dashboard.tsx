@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Activity,
   Heart,
@@ -111,6 +111,9 @@ const medications: Medication[] = [
 ];
 
 export default function Dashboard() {
+  const [selectedTimeRange, setSelectedTimeRange] = useState('today');
+  const [period, setPeriod] = useState('');
+
   return (
     <div>
       {/* Header Navigation */}
@@ -120,16 +123,14 @@ export default function Dashboard() {
             <div className="text-blue-600 font-semibold text-xl">
               Healthcare
             </div>
-            <Select defaultValue="all">
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select service type" />
+            <Select onValueChange={setPeriod}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Services</SelectItem>
-                <SelectItem value="hospital">Hospitals</SelectItem>
-                <SelectItem value="clinic">Clinics</SelectItem>
-                <SelectItem value="doctors">Doctors</SelectItem>
-                <SelectItem value="pharmacy">Pharmacies</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
               </SelectContent>
             </Select>
             <Button className="flex items-center gap-2">
@@ -244,7 +245,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <button className="flex flex-col items-center p-4 bg-red-50 rounded-lg hover:bg-red-100">
             <AlertCircle className="h-6 w-6 text-red-500" />
             <span className="mt-2 text-sm font-medium text-gray-900">Emergency Services</span>
@@ -257,9 +258,17 @@ export default function Dashboard() {
             <Droplet className="h-6 w-6 text-purple-500" />
             <span className="mt-2 text-sm font-medium text-gray-900">Blood Tests</span>
           </button>
-          <button className="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100">
+          <button onClick={() => window.location.href = '/insurance-mapping'} className="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100">
             <Shield className="h-6 w-6 text-green-500" />
-            <span className="mt-2 text-sm font-medium text-gray-900">Insurance</span>
+            <span className="mt-2 text-sm font-medium text-gray-900">Insurance Mapping</span>
+          </button>
+          <button onClick={() => window.location.href = '/face-detection'} className="flex flex-col items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100">
+            <Scan className="h-6 w-6 text-yellow-600" />
+            <span className="mt-2 text-sm font-medium text-gray-900">Face Detection</span>
+          </button>
+          <button className="flex flex-col items-center p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100">
+            <Hospital className="h-6 w-6 text-indigo-500" />
+            <span className="mt-2 text-sm font-medium text-gray-900">Find Hospital</span>
           </button>
         </div>
       </div>

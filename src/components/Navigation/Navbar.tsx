@@ -8,7 +8,9 @@ import {
   Brain,
   Menu,
   X,
-  BookOpen
+  BookOpen,
+  Hospital,
+  Scan
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -21,6 +23,8 @@ export default function Navbar() {
     { name: 'Products & Medicines', href: '/medicines', icon: ShoppingBag },
     { name: 'Resources', href: '/resources', icon: BookOpen },
     { name: 'Health AI', href: '/health-ai', icon: Brain },
+    { name: 'Insurance Mapping', href: '/insurance-mapping', icon: Hospital },
+    { name: 'Face Detection', href: '/face-detection', icon: Scan },
     { name: 'Profile', href: '/profile', icon: User },
   ];
 

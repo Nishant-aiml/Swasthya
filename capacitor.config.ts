@@ -1,23 +1,28 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.swasthyacare.app',
-  appName: 'SwasthyaCare',
+  appId: 'com.swasthya.app',
+  appName: 'Swasthya',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
     cleartext: true,
-    hostname: 'app',
-    iosScheme: 'https'
+  },
+  android: {
+    buildOptions: {
+      keystorePath: 'android/release-key.keystore',
+      keystoreAlias: 'key0',
+    },
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: true
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: '#10B981',
-      showSpinner: true,
-      spinnerColor: '#ffffff',
-      androidSplashResourceName: 'splash',
-      androidScaleType: 'CENTER_CROP'
+      backgroundColor: "#ffffff",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP",
     },
     Geolocation: {
       permissions: {
@@ -71,11 +76,6 @@ const config: CapacitorConfig = {
     allowsLinkPreview: true,
     scrollEnabled: true,
     limitsNavigationsToAppBoundDomains: true
-  },
-  android: {
-    allowMixedContent: true,
-    captureInput: true,
-    webContentsDebuggingEnabled: true
   }
 }
 

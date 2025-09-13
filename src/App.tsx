@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from '@/components/ui/ToastNotification';
+import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Dashboard from './pages/Dashboard';
@@ -15,201 +17,247 @@ import Medicines from './pages/Medicines';
 import HealthAI from './pages/HealthAI';
 import Resources from './pages/Resources';
 import Funzone from './pages/Funzone';
-import { AuthProvider } from './context/AuthContext';
+import InsuranceMapping from './pages/InsuranceMapping';
 import { DailyHealthTrivia } from '@/components/Games/DailyHealthTrivia';
 import { RapidFireQuiz } from '@/components/Games/RapidFireQuiz';
 import { WellnessWheel } from '@/components/Games/WellnessWheel';
 
-// Protected Route wrapper component
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  return (
-    <>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
-
   return (
-    <Routes>
-      <Route 
-        path="/login" 
-        element={
-          isAuthenticated ? 
-            <Navigate to="/" replace /> : 
-            <Login />
-        } 
-      />
-      
-      <Route 
-        path="/register" 
-        element={
-          isAuthenticated ? 
-            <Navigate to="/" replace /> : 
-            <Register />
-        } 
-      />
+    <div className="min-h-screen flex flex-col">
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <Dashboard />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <Profile />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/emergency"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <Emergency />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      <Route
-        path="/emergency"
-        element={
-          <ProtectedRoute>
-            <Emergency />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/emergency-chat"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <EmergencyChat />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      <Route
-        path="/emergency-chat"
-        element={
-          <ProtectedRoute>
-            <EmergencyChat />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/appointments"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <AppointmentPage />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      <Route
-        path="/appointments"
-        element={
-          <ProtectedRoute>
-            <AppointmentPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/medicines"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <Medicines />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      <Route
-        path="/medicines"
-        element={
-          <ProtectedRoute>
-            <Medicines />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/health-ai"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <HealthAI />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      <Route
-        path="/health-ai"
-        element={
-          <ProtectedRoute>
-            <HealthAI />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/resources"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <Resources />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      <Route
-        path="/resources"
-        element={
-          <ProtectedRoute>
-            <Resources />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/funzone"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <Funzone />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      <Route
-        path="/funzone"
-        element={
-          <ProtectedRoute>
-            <Funzone />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/insurance-mapping"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <InsuranceMapping />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      {/* Game Routes */}
-      <Route 
-        path="/games/daily-trivia" 
-        element={
-          <ProtectedRoute>
-            <DailyHealthTrivia />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/games/rapid-fire" 
-        element={
-          <ProtectedRoute>
-            <RapidFireQuiz />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/games/spin-wheel" 
-        element={
-          <ProtectedRoute>
-            <WellnessWheel />
-          </ProtectedRoute>
-        } 
-      />
+        <Route
+          path="/funzone/trivia"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <DailyHealthTrivia />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-      {/* Catch all route - redirect to login if not authenticated, otherwise to dashboard */}
-      <Route 
-        path="*" 
-        element={
-          isAuthenticated ? 
-            <Navigate to="/" replace /> : 
-            <Navigate to="/login" replace />
-        } 
-      />
-    </Routes>
-  );
-}
+        <Route
+          path="/funzone/quiz"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <RapidFireQuiz />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-function AppContent() {
-  const location = useLocation();
-  const { isAuthenticated } = useAuth();
-  const hideNavbarPaths = ['/login', '/register'];
-  const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
+        <Route
+          path="/funzone/wheel"
+          element={
+            <RequireAuth>
+              <>
+                <Navbar />
+                <main className="flex-grow">
+                  <WellnessWheel />
+                </main>
+                <Footer />
+              </>
+            </RequireAuth>
+          }
+        />
 
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (!token && !hideNavbarPaths.includes(location.pathname)) {
-      window.location.href = '/login';
-    }
-  }, [location]);
-
-  return (
-    <div className="flex flex-col min-h-screen">
-      {shouldShowNavbar && isAuthenticated && <Navbar />}
-      <main className="flex-grow">
-        <AppRoutes />
-      </main>
-      <Footer />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-        <Toaster position="top-center" />
-      </Router>
-    </AuthProvider>
+    <Router>
+      <ToastProvider>
+        <AuthProvider>
+          <Toaster position="top-center" richColors closeButton />
+          <AppRoutes />
+        </AuthProvider>
+      </ToastProvider>
+    </Router>
   );
 }
 
